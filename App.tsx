@@ -3,12 +3,19 @@ import Layout from './components/Layout';
 import StatsChart from './components/StatsChart';
 import Flashcard from './components/Flashcard';
 import AddWordModal from './components/AddWordModal';
-import { Word, Grade, Stats } from './types';
+import AuthPage from './components/AuthPage';
+import { Word, Grade, Stats, User } from './types';
 import { db } from './services/storage';
+import { authService } from './services/auth';
 import { calculateReview } from './lib/sm2';
 import { Loader2, Plus, Search, Trash2, CalendarClock } from 'lucide-react';
 
 const App: React.FC = () => {
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+
   const [activeTab, setActiveTab] = useState('dashboard');
   const [words, setWords] = useState<Word[]>([]);
   const [dueWords, setDueWords] = useState<Word[]>([]);
@@ -20,6 +27,17 @@ const App: React.FC = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+
+  // Check Auth on Mount
+  useEffect(() => {
+    const token = authService.getToken();
+    const currentUser = authService.getCurrentUser();
+    if (token && currentUser) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
+    }
+    setAuthChecking(false);
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -35,9 +53,39 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Reload data when auth changes
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (isAuthenticated) {
+        loadData();
+    } else {
+        // Guest mode support?
+        // If we want to allow guest mode without login immediately:
+        // loadData(); 
+        // But logic below handles "AuthPage" rendering.
+        // Let's rely on `isAuthenticated` state.
+    }
+  }, [isAuthenticated, loadData]);
+
+  const handleLoginSuccess = () => {
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    setIsAuthenticated(true);
+  };
+
+  const handleGuestAccess = () => {
+      setUser(null);
+      setIsAuthenticated(true);
+      loadData();
+  };
+
+  const handleLogout = () => {
+      authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+      setWords([]);
+      setDueWords([]);
+      setActiveTab('dashboard');
+  };
 
   const handleAddWord = async (word: Word) => {
     await db.addWord(word);
@@ -67,8 +115,7 @@ const App: React.FC = () => {
     // Update DB
     await db.updateWord(updatedWord);
 
-    // Update local state for immediate feedback if needed, 
-    // but mainly we move to next card
+    // Update local state for immediate feedback
     if (currentCardIndex < dueWords.length - 1) {
       setCurrentCardIndex(prev => prev + 1);
     } else {
@@ -246,11 +293,21 @@ const App: React.FC = () => {
     )
   }
 
+  if (authChecking) {
+      return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-indigo-600" size={32}/></div>
+  }
+
+  if (!isAuthenticated) {
+      return <AuthPage onLoginSuccess={handleLoginSuccess} onGuestAccess={handleGuestAccess} />
+  }
+
   return (
     <Layout 
       activeTab={activeTab} 
       onTabChange={setActiveTab}
       onAddClick={() => setIsAddModalOpen(true)}
+      user={user}
+      onLogout={handleLogout}
     >
       {activeTab === 'dashboard' && renderDashboard()}
       {activeTab === 'study' && renderStudy()}

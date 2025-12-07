@@ -42,3 +42,15 @@ export interface AIWordInfo {
   exampleTranslation: string;
   tags: string[];
 }
+
+// 用户认证相关
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
