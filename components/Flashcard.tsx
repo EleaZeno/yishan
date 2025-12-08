@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Word, Grade } from '../types';
-import { Eye, EyeOff, Volume2, RotateCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Word, Grade, IWindow } from '../types';
+import { Eye, Volume2, Mic, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchWordAudio } from '../services/geminiService';
 
@@ -9,14 +9,32 @@ interface FlashcardProps {
   onResult: (grade: Grade) => void;
 }
 
+type SpeechStatus = 'idle' | 'listening' | 'processing' | 'success' | 'fail' | 'unsupported';
+
 const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Speech Recognition State
+  const [speechStatus, setSpeechStatus] = useState<SpeechStatus>('idle');
+  const [transcript, setTranscript] = useState('');
+  const recognitionRef = useRef<any>(null);
 
   // Reset state when word changes
   useEffect(() => {
     setIsFlipped(false);
+    setSpeechStatus('idle');
+    setTranscript('');
+    stopRecognition();
   }, [word]);
+
+  // Check browser support
+  useEffect(() => {
+    const win = window as unknown as IWindow;
+    if (!win.SpeechRecognition && !win.webkitSpeechRecognition) {
+        setSpeechStatus('unsupported');
+    }
+  }, []);
 
   const handlePlayAudio = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -24,7 +42,6 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
     
     setIsPlaying(true);
     try {
-        // Optimistic UI or cache could be implemented here
         const audioBuffer = await fetchWordAudio(word.term);
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
         const source = ctx.createBufferSource();
@@ -37,6 +54,109 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
         console.error("Audio playback failed", err);
         setIsPlaying(false);
     }
+  };
+
+  const stopRecognition = () => {
+    if (recognitionRef.current) {
+        try {
+            recognitionRef.current.stop();
+        } catch (e) {
+            // ignore
+        }
+        recognitionRef.current = null;
+    }
+  };
+
+  const handleMicClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (speechStatus === 'listening') {
+        stopRecognition();
+        setSpeechStatus('idle');
+        return;
+    }
+
+    const win = window as unknown as IWindow;
+    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    
+    recognition.lang = 'en-US'; // Default to English
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+        setSpeechStatus('listening');
+        setTranscript('');
+    };
+
+    recognition.onresult = (event: any) => {
+        const last = event.results.length - 1;
+        const text = event.results[last][0].transcript;
+        setTranscript(text);
+        
+        // Normalize comparison (remove punctuation, lowercase)
+        const cleanInput = text.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const cleanTarget = word.term.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        if (cleanInput === cleanTarget || cleanInput.includes(cleanTarget)) {
+            setSpeechStatus('success');
+            // Play success sound logic could go here
+        } else {
+            setSpeechStatus('fail');
+        }
+    };
+
+    recognition.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        if (event.error === 'not-allowed') {
+            alert("请允许浏览器访问麦克风以使用跟读功能");
+        }
+        setSpeechStatus('idle');
+    };
+
+    recognition.onend = () => {
+        // If it ended without success/fail (e.g. silence), reset to idle unless we already have a result
+        setSpeechStatus(prev => (prev === 'listening' ? 'idle' : prev));
+        recognitionRef.current = null;
+    };
+
+    recognition.start();
+  };
+
+  const renderSpeechFeedback = () => {
+      if (speechStatus === 'idle' || speechStatus === 'unsupported') return null;
+
+      return (
+        <div className={clsx(
+            "mt-6 px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium transition-all animate-in fade-in slide-in-from-bottom-2",
+            speechStatus === 'listening' && "bg-indigo-50 text-indigo-600 border border-indigo-100",
+            speechStatus === 'success' && "bg-green-50 text-green-700 border border-green-200",
+            speechStatus === 'fail' && "bg-red-50 text-red-700 border border-red-200"
+        )}>
+            {speechStatus === 'listening' && (
+                <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>请大声朗读...</span>
+                </>
+            )}
+            {speechStatus === 'success' && (
+                <>
+                    <CheckCircle2 size={18} />
+                    <span>发音正确！ ({transcript})</span>
+                </>
+            )}
+            {speechStatus === 'fail' && (
+                <>
+                    <XCircle size={18} />
+                    <span>识别为: "{transcript}"，请重试</span>
+                </>
+            )}
+        </div>
+      );
   };
 
   return (
@@ -53,18 +173,41 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
                 <div className="absolute backface-hidden inset-0 flex flex-col justify-center items-center z-10">
                     <span className="text-sm uppercase tracking-wider text-gray-400 font-semibold mb-4">Word</span>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-800 break-all">{word.term}</h2>
+                    
                     {word.phonetic && (
-                        <div className="mt-4 flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
-                            <span className="text-indigo-600 font-mono">{word.phonetic}</span>
-                            <button 
-                                onClick={handlePlayAudio}
-                                className="p-1 rounded-full hover:bg-indigo-100 text-indigo-600 transition-colors"
-                            >
-                                <Volume2 size={16} className={clsx(isPlaying && "animate-pulse")} />
-                            </button>
+                        <div className="mt-4 flex items-center gap-3">
+                             <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                                <span className="text-indigo-600 font-mono text-lg">{word.phonetic}</span>
+                                <button 
+                                    onClick={handlePlayAudio}
+                                    className="p-1.5 rounded-full hover:bg-indigo-100 text-indigo-600 transition-colors"
+                                    title="播放发音"
+                                >
+                                    <Volume2 size={18} className={clsx(isPlaying && "animate-pulse")} />
+                                </button>
+                            </div>
+
+                            {/* Mic Button */}
+                            {speechStatus !== 'unsupported' && (
+                                <button
+                                    onClick={handleMicClick}
+                                    className={clsx(
+                                        "p-2.5 rounded-full transition-all shadow-sm border",
+                                        speechStatus === 'listening' 
+                                            ? "bg-red-100 text-red-600 border-red-200 animate-pulse ring-2 ring-red-200" 
+                                            : "bg-white text-gray-500 border-gray-200 hover:border-indigo-300 hover:text-indigo-600"
+                                    )}
+                                    title="跟读评测"
+                                >
+                                    <Mic size={20} />
+                                </button>
+                            )}
                         </div>
                     )}
-                     <p className="mt-8 text-gray-400 text-sm flex items-center gap-2">
+                    
+                    {renderSpeechFeedback()}
+
+                    <p className="mt-8 text-gray-400 text-sm flex items-center gap-2 absolute bottom-8">
                         <Eye size={16} /> 点击翻转查看释义
                     </p>
                 </div>

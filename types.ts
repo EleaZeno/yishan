@@ -54,3 +54,9 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+// 浏览器语音识别 API 类型定义
+export interface IWindow extends Window {
+  webkitSpeechRecognition: any;
+  SpeechRecognition: any;
+}
