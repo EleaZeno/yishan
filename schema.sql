@@ -1,23 +1,23 @@
--- !!! 请将此文件重命名为 schema.sql !!!
-
 DROP TABLE IF EXISTS users;
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
   id TEXT PRIMARY KEY,
-  email TEXT UNIQUE,
-  password_hash TEXT,
-  salt TEXT,
-  created_at INTEGER
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  created_at INTEGER NOT NULL
 );
 
 DROP TABLE IF EXISTS words;
-CREATE TABLE IF NOT EXISTS words (
+CREATE TABLE words (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  data TEXT, -- Stores the full JSON structure of the Word object
-  due_date INTEGER,
-  created_at INTEGER,
-  is_deleted INTEGER DEFAULT 0
+  data TEXT NOT NULL, -- Stores the JSON string of the word object
+  due_date INTEGER NOT NULL,
+  is_deleted INTEGER DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_words_user ON words(user_id);
-CREATE INDEX IF NOT EXISTS idx_words_due ON words(due_date);
+CREATE INDEX idx_words_user ON words(user_id);
+CREATE INDEX idx_words_due ON words(due_date);
+CREATE INDEX idx_users_email ON users(email);

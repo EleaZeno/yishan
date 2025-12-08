@@ -1,11 +1,10 @@
-# !!! 请将此文件重命名为 wrangler.toml !!!
-
 name = "yishan-app"
 pages_build_output_dir = "dist"
-compatibility_date = "2024-02-22"
+compatibility_date = "2024-04-01"
 
 # D1 Database Binding
+# 这里的 database_id 需要您运行 `npx wrangler d1 create yishan-db` 后获取并替换
 [[d1_databases]]
 binding = "DB"
 database_name = "yishan-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID" # 运行 `npx wrangler d1 create yishan-db` 获取 ID 并填入此处
+database_id = "f3cf9afd-8bd1-4fa8-abf4-048d46e3edda"
