@@ -1,12 +1,9 @@
 name = "yishan-app"
-compatibility_date = "2024-04-05"
+compatibility_date = "2024-02-22"
 pages_build_output_dir = "dist"
 
-# 环境变量 (本地开发时无需设置，生产环境在 Dashboard 设置)
-[vars]
-JWT_SECRET = "dev-secret-key-change-in-prod"
-
-# D1 数据库绑定
+# 配置 D1 数据库绑定
+# 请确保 binding 名称 "DB" 与 functions/utils.ts 中的 Env 接口一致
 [[d1_databases]]
 binding = "DB"
 database_name = "yishan-db"

@@ -183,7 +183,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
             )}>
                 {/* Front Side */}
                 <div className="absolute backface-hidden inset-0 flex flex-col justify-center items-center z-10">
-                    <span className="text-sm uppercase tracking-wider text-gray-400 font-semibold mb-4">Word</span>
+                    <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-4">单词</span>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-800 break-all">{word.term}</h2>
                     
                     {word.phonetic && (
@@ -228,7 +228,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
                 <div className="absolute backface-hidden inset-0 flex flex-col justify-center items-center z-0 rotate-y-180 bg-slate-50 rounded-3xl">
                      <div className="w-full h-full p-8 flex flex-col justify-center overflow-y-auto">
                         <div className="mb-6">
-                            <span className="text-xs uppercase text-gray-400 font-bold tracking-widest">Definition</span>
+                            <span className="text-xs uppercase text-gray-400 font-bold tracking-widest">释义</span>
                             <p className="text-xl md:text-2xl font-medium text-gray-800 mt-1">{word.definition}</p>
                         </div>
 

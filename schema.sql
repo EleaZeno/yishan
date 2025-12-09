@@ -1,5 +1,9 @@
--- 用户表：存储账户认证信息
+-- 初始化数据库结构
+
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS words;
+
+-- 用户表
 CREATE TABLE users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
@@ -8,18 +12,17 @@ CREATE TABLE users (
   created_at INTEGER NOT NULL
 );
 
--- 单词表：存储单词卡片数据及SM-2算法状态
-DROP TABLE IF EXISTS words;
+-- 单词表
+-- data 字段存储单词的完整 JSON 对象 (包含 definition, tags, sm2算法数据等)
 CREATE TABLE words (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  data TEXT NOT NULL, -- 存储完整 Word 对象的 JSON 字符串
+  data TEXT NOT NULL,
   due_date INTEGER NOT NULL,
-  created_at INTEGER NOT NULL,
-  is_deleted INTEGER DEFAULT 0, -- 软删除标记
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  is_deleted INTEGER DEFAULT 0,
+  created_at INTEGER NOT NULL
 );
 
--- 索引：优化复习队列获取和列表排序
+-- 索引优化
 CREATE INDEX idx_words_user_due ON words(user_id, due_date);
-CREATE INDEX idx_words_user_created ON words(user_id, created_at);
+CREATE INDEX idx_users_email ON users(email);

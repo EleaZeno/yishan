@@ -60,7 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
                     {user ? (
                         <>
                             <div className="px-3 py-2 border-b border-gray-100 mb-1">
-                                <p className="text-xs text-gray-400 font-medium">Signed in as</p>
+                                <p className="text-xs text-gray-400 font-medium">当前账号</p>
                                 <p className="text-sm font-bold text-gray-800 truncate">{user.email}</p>
                             </div>
                             <button 
