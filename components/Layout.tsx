@@ -21,9 +21,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
+    <div className="flex flex-col h-full bg-gray-50 text-gray-900 overflow-hidden">
       {/* Header */}
-      <header className="flex-none bg-white shadow-sm z-10 px-4 py-3 flex justify-between items-center lg:px-8">
+      <header className="flex-none bg-white shadow-sm z-20 px-4 py-3 flex justify-between items-center lg:px-8">
         <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-indigo-200 shadow-sm">
                 忆
@@ -34,15 +34,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
                     Cloud
                  </span>
             )}
-            {!user && (
-                 <span className="hidden sm:inline-block ml-2 px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-medium border border-gray-200">
-                    Guest
-                 </span>
-            )}
         </div>
         
         <div className="flex items-center gap-3">
-             {/* Desktop Add Button */}
             <button 
                 onClick={onAddClick}
                 className="hidden md:flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full font-medium transition-colors shadow-sm"
@@ -51,7 +45,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
                 <span>添加单词</span>
             </button>
 
-            {/* User Profile / Logout */}
             <div className="relative group">
                 <button className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors">
                     <UserIcon size={20} />
@@ -72,7 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
                         </>
                     ) : (
                          <button 
-                            onClick={onLogout} // In guest mode this acts as "Go to Login"
+                            onClick={onLogout}
                             className="w-full text-left px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg"
                         >
                             登录 / 注册
@@ -84,12 +77,17 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8 max-w-7xl mx-auto w-full">
+      {/* Logic: If study mode, we want 'h-full' and no scroll to support swipe gestures. 
+          If dashboard/library, we want 'overflow-y-auto' for scrolling content. */}
+      <main className={clsx(
+          "flex-1 w-full max-w-7xl mx-auto relative",
+          activeTab === 'study' ? "overflow-hidden" : "overflow-y-auto overflow-x-hidden p-4 lg:p-8"
+      )}>
         {children}
       </main>
 
       {/* Mobile/Tablet Bottom Navigation */}
-      <nav className="flex-none bg-white border-t border-gray-200 pb-safe md:pb-0">
+      <nav className="flex-none bg-white border-t border-gray-200 pb-safe md:pb-0 z-20">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto md:max-w-4xl">
             {navItems.map((item) => {
                 const Icon = item.icon;
@@ -109,7 +107,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
                 );
             })}
             
-             {/* Floating Action Button for Mobile */}
             <button
                 onClick={onAddClick}
                 className="md:hidden flex flex-col items-center justify-center w-full h-full text-indigo-600"
