@@ -11,10 +11,6 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      rollupOptions: {
-        // Externalize deps so they are loaded via importmap (CDN) instead of bundled
-        external: ['react', 'react-dom', 'lucide-react', 'recharts', 'clsx', '@google/genai'],
-      }
     }
   };
 });
