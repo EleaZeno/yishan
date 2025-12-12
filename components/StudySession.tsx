@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Word, Grade } from '../types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Word, InteractionMetrics } from '../types';
 import Flashcard from './Flashcard';
 import { CheckCircle, Search, Plus, BookDown, Loader2 } from 'lucide-react';
 import { db } from '../services/storage';
-import { calculateReview } from '../lib/sm2';
+import { calculateStrength, scheduleNextReview } from '../lib/algorithm';
 
 interface StudySessionProps {
   dueWords: Word[];
@@ -17,45 +17,71 @@ interface StudySessionProps {
 const StudySession: React.FC<StudySessionProps> = ({ 
   dueWords, onComplete, onAddWord, onImportCore, isImporting, onUpdateWord 
 }) => {
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [sessionProgress, setSessionProgress] = useState(0);
+  // Use a local queue state to manage immediate repetitions
+  const [queue, setQueue] = useState<Word[]>([]);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [totalSessionWords, setTotalSessionWords] = useState(0);
+  
+  // Initialize queue
+  useEffect(() => {
+      setQueue(dueWords);
+      setTotalSessionWords(dueWords.length);
+      setCompletedCount(0);
+  }, [dueWords]);
 
-  const handleReviewResult = async (grade: Grade) => {
-    const currentWord = dueWords[currentCardIndex];
+  const handleInteraction = async (metrics: InteractionMetrics) => {
+    const currentWord = queue[0];
     if (!currentWord) return;
 
-    // 1. Calculate new state
-    const updatedFields = calculateReview(currentWord, grade);
-    const updatedWord = { ...currentWord, ...updatedFields };
+    // 1. Calculate new Strength based on Behavior
+    const strength = calculateStrength(currentWord, metrics);
+    
+    // 2. Schedule Next Review
+    const { interval, dueDate, repetitions } = scheduleNextReview(strength, currentWord.interval || 0);
 
-    // 2. Update DB asynchronously
+    const updatedWord: Word = {
+        ...currentWord,
+        strength,
+        interval,
+        dueDate,
+        repetitions: (currentWord.repetitions || 0) + repetitions
+    };
+
+    // 3. Persist
     try {
         await db.updateWord(updatedWord);
-        onUpdateWord(updatedWord); // Update local cache if needed
+        onUpdateWord(updatedWord);
     } catch (err) {
         console.error("Failed to sync word", err);
     }
 
-    // 3. Move UI forward
-    const nextIndex = currentCardIndex + 1;
-    setSessionProgress(Math.round((nextIndex / dueWords.length) * 100));
-
-    if (nextIndex < dueWords.length) {
-      setCurrentCardIndex(nextIndex);
+    // 4. Queue Management Logic
+    const newQueue = queue.slice(1); // Remove current
+    
+    // If interval is very short (< 10 mins), it means user forgot or it's hard. 
+    // Re-queue it in this session!
+    if (interval <= 10) {
+        // Insert back into queue at position 3 or end, whichever is closer, to ensure spaced rep within session
+        const reInsertIndex = Math.min(newQueue.length, 3);
+        newQueue.splice(reInsertIndex, 0, updatedWord);
+        // Don't increment completed count yet as we will see it again
     } else {
-      setSessionCompleted(true);
+        setCompletedCount(prev => prev + 1);
     }
+
+    setQueue(newQueue);
   };
 
-  if (sessionCompleted) {
+  if (queue.length === 0 && totalSessionWords > 0) {
     return (
         <div className="flex flex-col items-center justify-center h-[60vh] text-center animate-in zoom-in-95">
             <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600 shadow-green-200 shadow-lg">
                 <CheckCircle size={48} />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">太棒了！</h2>
-            <p className="text-gray-500 max-w-xs mx-auto mb-8">你已经完成了当前队列。保持这个节奏！</p>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">本次复习完成！</h2>
+            <p className="text-gray-500 max-w-xs mx-auto mb-8">
+                智能算法已根据你的滑动行为更新了记忆模型。
+            </p>
             <button 
                 onClick={onComplete}
                 className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold shadow-lg hover:bg-black transition-all active:scale-95"
@@ -66,7 +92,7 @@ const StudySession: React.FC<StudySessionProps> = ({
     );
   }
 
-  if (dueWords.length === 0) {
+  if (queue.length === 0) {
     return (
          <div className="flex flex-col items-center justify-center h-[60vh] text-center">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
@@ -92,18 +118,20 @@ const StudySession: React.FC<StudySessionProps> = ({
     );
   }
 
+  const progress = totalSessionWords > 0 ? Math.min(100, Math.round((completedCount / totalSessionWords) * 100)) : 0;
+
   return (
     <div className="max-w-md mx-auto h-[calc(100vh-140px)] flex flex-col">
          {/* Progress Bar */}
          <div className="mb-6">
             <div className="flex justify-between text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">
                 <span>Session Progress</span>
-                <span>{Math.round(sessionProgress)}%</span>
+                <span>{progress}%</span>
             </div>
             <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                 <div 
                     className="h-full bg-indigo-500 transition-all duration-500 ease-out"
-                    style={{ width: `${sessionProgress}%` }}
+                    style={{ width: `${progress}%` }}
                 />
             </div>
          </div>
@@ -111,10 +139,9 @@ const StudySession: React.FC<StudySessionProps> = ({
          {/* Card Area */}
          <div className="flex-1 relative">
             <Flashcard 
-                // Add key to force remount when index changes
-                key={dueWords[currentCardIndex].id}
-                word={dueWords[currentCardIndex]} 
-                onResult={handleReviewResult}
+                key={queue[0].id} // Force remount for new word
+                word={queue[0]} 
+                onResult={handleInteraction}
             />
          </div>
     </div>

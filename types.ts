@@ -8,42 +8,35 @@ export interface Word {
   exampleTranslation?: string; // 例句翻译
   tags: string[];
   
-  // SM-2 Algorithm fields
-  easiness: number;       // 简易度 (EF)
-  interval: number;       // 间隔天数
-  repetitions: number;    // 连续正确次数
+  // Memory Algorithm Fields (YiShan Strength Model)
+  strength: number;       // 记忆强度 (0-1)
+  interval: number;       // 当前间隔 (分钟)
   dueDate: number;        // 下次复习时间戳
-  lastReviewDate?: number; // 上次复习时间
+  repetitions: number;    // 复习次数
+  
+  // Legacy SM-2 fields (Optional/Deprecated)
+  easiness?: number;      
   
   createdAt: number;
 }
 
-// 复习反馈等级 (0-5)
-export enum Grade {
-  Blackout = 0, // 完全忘记
-  Hard = 3,     // 困难
-  Good = 4,     // 记得，但有点犹豫
-  Easy = 5,     // 轻松秒杀
+// 用户交互行为指标 (作为算法输入)
+export interface InteractionMetrics {
+  durationMs: number;     // 停留毫秒数
+  flipped: boolean;       // 是否翻转查看背面
+  audioPlayed: number;    // 播放音频次数
+  exampleExpanded: boolean; // 是否展开例句
+  direction: 'left' | 'right'; // 滑动方向
 }
 
 // 统计数据
 export interface Stats {
   totalWords: number;
   dueToday: number;
-  learned: number; // Interval > 1
-  retentionRate: number;
+  learned: number; // Interval > 1 day
+  retentionRate: number; // Based on avg strength
 }
 
-// API 响应结构 (Gemini)
-export interface AIWordInfo {
-  definition: string;
-  phonetic: string;
-  exampleSentence: string;
-  exampleTranslation: string;
-  tags: string[];
-}
-
-// 用户认证相关
 export interface User {
   id: string;
   email: string;
@@ -55,7 +48,6 @@ export interface AuthResponse {
   user: User;
 }
 
-// 浏览器语音识别 API 类型定义
 export interface IWindow extends Window {
   webkitSpeechRecognition: any;
   SpeechRecognition: any;

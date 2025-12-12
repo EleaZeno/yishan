@@ -1,22 +1,44 @@
 
 // 简单的 Web Audio API 合成器，用于生成无需素材的 UI 音效
-const audioCtx = typeof window !== 'undefined' && (window.AudioContext || (window as any).webkitAudioContext) 
-  ? new (window.AudioContext || (window as any).webkitAudioContext)() 
-  : null;
+// 懒加载模式，避免在手机端因非用户交互创建而被挂起
+let audioCtx: AudioContext | null = null;
+
+const getAudioContext = () => {
+  if (!audioCtx && typeof window !== 'undefined') {
+    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    if (Ctx) {
+      audioCtx = new Ctx();
+    }
+  }
+  return audioCtx;
+};
+
+// 供外部调用以预热/解锁音频（如在首次点击时）
+export const initAudio = () => {
+  const ctx = getAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(e => console.error("Audio resume failed", e));
+  }
+};
 
 type SoundType = 'flip' | 'success' | 'click' | 'victory' | 'forgot';
 
 export const playSound = (type: SoundType) => {
-  if (!audioCtx) return;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  
+  // 关键：在播放前尝试恢复上下文状态
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
 
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
 
   oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
+  gainNode.connect(ctx.destination);
 
-  const now = audioCtx.currentTime;
+  const now = ctx.currentTime;
 
   switch (type) {
     case 'flip':
@@ -50,10 +72,10 @@ export const playSound = (type: SoundType) => {
       break;
 
     case 'victory': // 完美/简单 (双音)
-      const osc2 = audioCtx.createOscillator();
-      const gain2 = audioCtx.createGain();
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
       osc2.connect(gain2);
-      gain2.connect(audioCtx.destination);
+      gain2.connect(ctx.destination);
 
       oscillator.type = 'square';
       oscillator.frequency.setValueAtTime(523.25, now); // C5

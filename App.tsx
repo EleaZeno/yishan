@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import AddWordModal from './components/AddWordModal';
@@ -11,6 +12,7 @@ import { authService } from './services/auth';
 import { getInitialWordState } from './lib/sm2';
 import { Loader2 } from 'lucide-react';
 import { getCoreVocabulary } from './data/vocabulary';
+import { initAudio } from './lib/sound';
 
 const App: React.FC = () => {
   // Auth State
@@ -39,6 +41,27 @@ const App: React.FC = () => {
           window.removeEventListener('online', handleOnline);
           window.removeEventListener('offline', handleOffline);
       }
+  }, []);
+
+  // Audio Unlocker for Mobile
+  useEffect(() => {
+    const unlockAudio = () => {
+        initAudio(); // Initialize and Resume AudioContext on first touch
+        // Remove listener after first interaction
+        window.removeEventListener('touchstart', unlockAudio);
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+    };
+
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+
+    return () => {
+        window.removeEventListener('touchstart', unlockAudio);
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+    };
   }, []);
 
   // Check Auth on Mount
