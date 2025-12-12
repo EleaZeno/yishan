@@ -4,7 +4,7 @@ import { authService } from "./auth";
 const STORAGE_KEY = 'yishan_words_v1';
 const API_BASE = '/api/words';
 
-// LocalStorage Implementation (Guest Mode)
+// LocalStorage Implementation (Guest Mode) - Memory intensive but fast for small data
 const localAdapter = {
   getWords: (): Word[] => {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -15,7 +15,6 @@ const localAdapter = {
   }
 };
 
-// API Implementation (Cloud Mode)
 const apiAdapter = {
   async fetchWithAuth(url: string, options: RequestInit = {}) {
     const token = authService.getToken();
@@ -27,17 +26,12 @@ const apiAdapter = {
     
     try {
         const response = await fetch(url, { ...options, headers });
-        
         if (response.status === 401) {
             authService.logout();
             window.location.reload();
             throw new Error('Unauthorized');
         }
-        
-        if (!response.ok) {
-            throw new Error('API Request Failed');
-        }
-        
+        if (!response.ok) throw new Error('API Request Failed');
         return response.json();
     } catch (e) {
         console.error("API Error", e);
@@ -49,28 +43,37 @@ const apiAdapter = {
 export const db = {
   isGuestMode: () => !authService.getToken(),
 
-  // Get All Words
-  getAllWords: async (): Promise<Word[]> => {
+  // Get Stats (Uses full fetch for now, optimized endpoint recommended for future)
+  getStatsData: async (): Promise<Word[]> => {
+    if (db.isGuestMode()) return localAdapter.getWords();
+    // For cloud stats, we might need a dedicated endpoint, but for now fetch library page 1 
+    // This is a trade-off. Correct way: GET /api/stats. 
+    // Fallback: Fetch due words to show something useful.
+    return db.getDueWords(); 
+  },
+
+  // Library Mode: Pagination
+  getLibraryWords: async (page: number = 1, limit: number = 20): Promise<Word[]> => {
     if (db.isGuestMode()) {
-        return localAdapter.getWords().sort((a, b) => b.createdAt - a.createdAt);
+        const all = localAdapter.getWords().sort((a, b) => b.createdAt - a.createdAt);
+        const start = (page - 1) * limit;
+        return all.slice(start, start + limit);
     } else {
-        try {
-            const res = await apiAdapter.fetchWithAuth(API_BASE);
-            return res.sort((a: Word, b: Word) => b.createdAt - a.createdAt);
-        } catch (e) {
-            throw e;
-        }
+        return apiAdapter.fetchWithAuth(`${API_BASE}?mode=library&page=${page}&limit=${limit}`);
     }
   },
 
-  // Get Due Words
+  // Study Mode: Get due words
   getDueWords: async (): Promise<Word[]> => {
-    const words = await db.getAllWords();
-    const now = Date.now();
-    return words.filter(w => w.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate);
+    if (db.isGuestMode()) {
+        const words = localAdapter.getWords();
+        const now = Date.now();
+        return words.filter(w => w.dueDate <= now).sort((a, b) => a.dueDate - b.dueDate).slice(0, 50);
+    } else {
+        return apiAdapter.fetchWithAuth(`${API_BASE}?mode=study`);
+    }
   },
 
-  // Add Word
   addWord: async (word: Word): Promise<void> => {
     if (db.isGuestMode()) {
         const words = localAdapter.getWords();
@@ -84,7 +87,6 @@ export const db = {
     }
   },
 
-  // Update Word
   updateWord: async (updatedWord: Word): Promise<void> => {
     if (db.isGuestMode()) {
         const words = localAdapter.getWords();
@@ -101,7 +103,6 @@ export const db = {
     }
   },
 
-  // Delete Word
   deleteWord: async (id: string): Promise<void> => {
     if (db.isGuestMode()) {
         const words = localAdapter.getWords();
@@ -114,18 +115,24 @@ export const db = {
     }
   },
   
-  // Import
   importWords: async (words: Word[]): Promise<void> => {
     if (db.isGuestMode()) {
         const existing = localAdapter.getWords();
         const newBatch = [...existing, ...words];
         localAdapter.saveWords(newBatch);
     } else {
-        // Use batch API for better performance
         await apiAdapter.fetchWithAuth(`${API_BASE}/batch`, {
             method: 'POST',
             body: JSON.stringify(words)
         });
     }
+  },
+
+  // Helper for dashboard charts (Guest only full scan, Cloud needs optimization)
+  getAllWordsForStats: async (): Promise<Word[]> => {
+     if(db.isGuestMode()) return localAdapter.getWords();
+     // Caution: This is heavy. Only use for small accounts or implement /api/stats
+     // Assuming limit 1000 for stats visualization for now
+     return apiAdapter.fetchWithAuth(`${API_BASE}?mode=library&limit=1000`); 
   }
 };
