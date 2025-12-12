@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Layout from './components/Layout';
 import StatsChart from './components/StatsChart';
 import Flashcard from './components/Flashcard';
 import AddWordModal from './components/AddWordModal';
 import AuthPage from './components/AuthPage';
+import BookLibrary from './components/BookLibrary';
 import { Word, Grade, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
 import { calculateReview } from './lib/sm2';
-import { Loader2, Plus, Search, Trash2, CalendarClock } from 'lucide-react';
+import { Loader2, Plus, Search, Trash2, CalendarClock, Book, BookOpen } from 'lucide-react';
+import clsx from 'clsx';
 
 const App: React.FC = () => {
   // Auth State
@@ -22,6 +24,9 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Library Sub-tab State
+  const [libraryMode, setLibraryMode] = useState<'my-words' | 'book'>('my-words');
 
   // Study Session State
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -58,11 +63,7 @@ const App: React.FC = () => {
     if (isAuthenticated) {
         loadData();
     } else {
-        // Guest mode support?
-        // If we want to allow guest mode without login immediately:
-        // loadData(); 
-        // But logic below handles "AuthPage" rendering.
-        // Let's rely on `isAuthenticated` state.
+        // Guest mode handled by auth check flow or manual reset
     }
   }, [isAuthenticated, loadData]);
 
@@ -244,51 +245,85 @@ const App: React.FC = () => {
   };
 
   const renderLibrary = () => {
-    const filteredWords = words.filter(w => w.term.toLowerCase().includes(searchTerm.toLowerCase()));
+    // Helper to get set of existing terms for efficient lookup
+    const existingTerms = useMemo(() => new Set(words.map(w => w.term)), [words]);
 
     return (
         <div className="space-y-4 h-full flex flex-col">
-            <div className="relative">
-                <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-                <input 
-                    type="text" 
-                    placeholder="搜索单词..." 
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+            {/* Library Toggle */}
+            <div className="flex p-1 bg-gray-100 rounded-xl font-medium text-sm text-gray-600 mb-2">
+                <button 
+                    onClick={() => setLibraryMode('my-words')}
+                    className={clsx(
+                        "flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all",
+                        libraryMode === 'my-words' ? "bg-white text-indigo-600 shadow-sm" : "hover:bg-gray-200"
+                    )}
+                >
+                    <BookOpen size={16} />
+                    我的生词本
+                </button>
+                <button 
+                    onClick={() => setLibraryMode('book')}
+                    className={clsx(
+                        "flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all",
+                        libraryMode === 'book' ? "bg-white text-emerald-600 shadow-sm" : "hover:bg-gray-200"
+                    )}
+                >
+                    <Book size={16} />
+                    初中核心词汇
+                </button>
+            </div>
+
+            {libraryMode === 'book' ? (
+                <BookLibrary 
+                    existingWords={existingTerms}
+                    onAddWord={handleAddWord}
                 />
-            </div>
-            
-            <div className="flex-1 overflow-y-auto space-y-3 pb-20">
-                {filteredWords.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400">未找到单词</div>
-                ) : (
-                    filteredWords.map(word => (
-                        <div key={word.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center hover:shadow-md transition-shadow">
-                            <div>
-                                <h4 className="font-bold text-gray-800 text-lg">{word.term}</h4>
-                                <p className="text-sm text-gray-500 truncate max-w-[200px] md:max-w-md">{word.definition}</p>
-                                <div className="flex gap-2 mt-2">
-                                    {word.tags.map(tag => (
-                                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">{tag}</span>
-                                    ))}
+            ) : (
+                <>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+                        <input 
+                            type="text" 
+                            placeholder="搜索我的单词..." 
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+                        />
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto space-y-3 pb-20">
+                        {words.filter(w => w.term.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 ? (
+                            <div className="text-center py-10 text-gray-400">未找到单词</div>
+                        ) : (
+                            words.filter(w => w.term.toLowerCase().includes(searchTerm.toLowerCase())).map(word => (
+                                <div key={word.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center hover:shadow-md transition-shadow">
+                                    <div>
+                                        <h4 className="font-bold text-gray-800 text-lg">{word.term}</h4>
+                                        <p className="text-sm text-gray-500 truncate max-w-[200px] md:max-w-md">{word.definition}</p>
+                                        <div className="flex gap-2 mt-2">
+                                            {word.tags.map(tag => (
+                                                <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">{tag}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${word.interval > 20 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                            Lv.{word.repetitions}
+                                        </span>
+                                        <button 
+                                            onClick={(e) => handleDeleteWord(word.id, e)}
+                                            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${word.interval > 20 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                    Lv.{word.repetitions}
-                                </span>
-                                <button 
-                                    onClick={(e) => handleDeleteWord(word.id, e)}
-                                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
+                            ))
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     )
   }
