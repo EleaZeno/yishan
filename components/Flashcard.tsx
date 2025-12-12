@@ -34,8 +34,8 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
     
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
-        setIsPlaying(false);
     }
+    setIsPlaying(false);
   }, [word]);
 
   // Keyboard Shortcuts
@@ -86,7 +86,6 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
     // Mobile robustness: cancel previous only if speaking to avoid initial lag
     if (synth.speaking || isPlaying) {
         synth.cancel();
-        setIsPlaying(false);
     }
     
     const utterance = new SpeechSynthesisUtterance(word.term);
@@ -96,11 +95,12 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
     utterance.lang = 'en-US'; 
     utterance.rate = 0.85; 
     
-    // Try to find a good voice, but don't fail if voices aren't loaded yet
+    // Voice selection logic
     const voices = synth.getVoices();
     const bestVoice = voices.find(v => v.name.includes('Google US English')) 
-                   || voices.find(v => v.lang === 'en-US' && v.localService) // Prefer local for speed
-                   || voices.find(v => v.lang === 'en-US');
+                   || voices.find(v => v.lang === 'en-US' && v.localService) 
+                   || voices.find(v => v.lang.startsWith('en'));
+    
     if (bestVoice) utterance.voice = bestVoice;
 
     utterance.onstart = () => setIsPlaying(true);
@@ -108,12 +108,25 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
         setIsPlaying(false);
         utteranceRef.current = null;
     };
-    utterance.onerror = (e) => {
-        console.error("TTS Error", e);
+    
+    // Improved error handling
+    utterance.onerror = (event) => {
+        // 'canceled' and 'interrupted' are expected behaviors when clicking fast
+        if (event.error === 'canceled' || event.error === 'interrupted') {
+            setIsPlaying(false);
+            return;
+        }
+        
+        console.warn(`TTS Warning: ${event.error}`, event);
         setIsPlaying(false);
     };
     
-    synth.speak(utterance);
+    try {
+        synth.speak(utterance);
+    } catch (err) {
+        console.error("TTS System Error", err);
+        setIsPlaying(false);
+    }
   };
 
   const completeInteraction = (direction: 'left' | 'right') => {
