@@ -109,10 +109,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
   const handlePlayAudio = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     const synth = window.speechSynthesis;
-    if (!synth) {
-        // Browser doesn't support TTS
-        return;
-    }
+    if (!synth) return;
 
     if (isPlaying) { 
         synth.cancel(); 
@@ -122,23 +119,24 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
     
     // Reset engine state
     synth.cancel();
-    
-    // Add a small delay to allow the cancel to process and engine to reset
-    // This fixes 'synthesis-failed' on many mobile devices
-    setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(word.term);
-        // Keep reference to prevent garbage collection which causes events to not fire
+
+    const speak = (text: string, isRetry = false) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Critical: Store reference to prevent garbage collection
         utteranceRef.current = utterance;
 
         utterance.lang = 'en-US';
         utterance.rate = 0.8;
         
-        // Attempt to select a better voice
-        const voices = synth.getVoices();
-        const bestVoice = voices.find(v => v.name.includes('Google US English')) 
-                    || voices.find(v => v.name.includes('Samantha'))
-                    || voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
-        if (bestVoice) utterance.voice = bestVoice;
+        // Only attempt to set voice on first try to avoid "synthesis-failed" due to bad voice
+        if (!isRetry) {
+            const voices = synth.getVoices();
+            const bestVoice = voices.find(v => v.name.includes('Google US English')) 
+                        || voices.find(v => v.name.includes('Samantha'))
+                        || voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
+            if (bestVoice) utterance.voice = bestVoice;
+        }
         
         utterance.onstart = () => setIsPlaying(true);
         utterance.onend = () => {
@@ -146,30 +144,28 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
             utteranceRef.current = null;
         };
         utterance.onerror = (event) => {
-            if (event.error !== 'interrupted' && event.error !== 'canceled') {
-                console.error('Speech synthesis error:', event.error);
+            console.error('Speech synthesis error:', event.error);
+            setIsPlaying(false);
+            utteranceRef.current = null;
+
+            // Retry logic for synthesis-failed or network error
+            if ((event.error === 'synthesis-failed' || event.error === 'network') && !isRetry) {
+                console.log('Retrying synthesis with default voice...');
+                synth.cancel(); // Clear the failed state
                 
-                // Retry logic for synthesis-failed
-                if (event.error === 'synthesis-failed') {
-                    console.log('Retrying synthesis...');
-                    setIsPlaying(false); // Reset UI
-                    synth.cancel();
-                    
-                    setTimeout(() => {
-                        const retryUtterance = new SpeechSynthesisUtterance(word.term);
-                        retryUtterance.lang = 'en-US';
-                        // Don't assign specific voice on retry to let browser use default
-                        synth.speak(retryUtterance);
-                    }, 100);
-                }
-            }
-            if (event.error !== 'synthesis-failed') {
-                setIsPlaying(false);
-                utteranceRef.current = null;
+                setTimeout(() => {
+                    speak(text, true);
+                }, 100);
             }
         };
         
         synth.speak(utterance);
+    };
+    
+    // Add a small delay to allow the cancel to process and engine to reset
+    // This fixes 'synthesis-failed' on many mobile devices
+    setTimeout(() => {
+        speak(word.term);
     }, 50);
   };
 
