@@ -1,113 +1,77 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Word, Grade, IWindow } from '../types';
-import { Volume2, RotateCw, ThumbsUp, Zap } from 'lucide-react';
+import { Word, Grade } from '../types';
+import { Volume2, Sparkles, Brain, XCircle, CheckCircle2, Eye } from 'lucide-react';
 import clsx from 'clsx';
+import { playSound } from '../lib/sound';
 
 interface FlashcardProps {
   word: Word;
   onResult: (grade: Grade) => void;
 }
 
-// 简单的 Levenshtein 距离算法
-const calculateSimilarity = (target: string, input: string): number => {
-  if (!target || !input) return 0;
-  const s1 = target.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const s2 = input.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (s1 === s2) return 100;
-  if (s2.includes(s1)) return 100;
-  const track = Array(s2.length + 1).fill(null).map(() => Array(s1.length + 1).fill(null));
-  for (let i = 0; i <= s1.length; i += 1) { track[0][i] = i; }
-  for (let j = 0; j <= s2.length; j += 1) { track[j][0] = j; }
-  for (let j = 1; j <= s2.length; j += 1) {
-    for (let i = 1; i <= s1.length; i += 1) {
-      const indicator = s1[i - 1] === s2[j - 1] ? 0 : 1;
-      track[j][i] = Math.min(track[j][i - 1] + 1, track[j - 1][i] + 1, track[j - 1][i - 1] + indicator);
-    }
-  }
-  return Math.max(0, Math.round((1 - track[s2.length][s1.length] / Math.max(s1.length, s2.length)) * 100));
-};
-
 const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [swipeState, setSwipeState] = useState({ x: 0, y: 0, rotation: 0, opacity: 1, text: '' });
+  
+  // Swipe logic state
+  const [swipeState, setSwipeState] = useState({ x: 0, rotation: 0, opacity: 1, text: '' });
   const [isDragging, setIsDragging] = useState(false);
-  
-  // Speech Recognition State
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
-
-  const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
-  
-  // TTS State
+  const cardRef = useRef<HTMLDivElement>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  // TTS Warm-up
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-        // Just accessing getVoices() warms up the engine in Chrome
-        window.speechSynthesis.getVoices();
-    }
-  }, []);
 
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        // Only trigger if no input is focused
         if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
-
         switch(e.code) {
             case 'Space':
+            case 'Enter':
                 e.preventDefault();
-                flipCard();
+                if (!showAnswer) handleReveal();
                 break;
             case 'KeyS':
                 e.preventDefault();
                 handlePlayAudio();
                 break;
-            case 'Digit1': // 忘记
-                if (isFlipped) onResult(Grade.Blackout);
-                break;
-            case 'Digit2': // 困难
-                if (isFlipped) onResult(Grade.Hard);
-                break;
-            case 'Digit3': // 记得
-                if (isFlipped) onResult(Grade.Good);
-                break;
-            case 'Digit4': // 简单
-                if (isFlipped) onResult(Grade.Easy);
-                break;
-            case 'ArrowLeft': // Force "Forgot" via arrow if flipped
-                if (isFlipped) onResult(Grade.Blackout);
-                break;
-             case 'ArrowRight': // Force "Easy" via arrow if flipped
-                if (isFlipped) onResult(Grade.Easy);
-                break;
+            case 'Digit1': if (showAnswer) handleGrade(Grade.Blackout); break;
+            case 'Digit2': if (showAnswer) handleGrade(Grade.Hard); break;
+            case 'Digit3': if (showAnswer) handleGrade(Grade.Good); break;
+            case 'Digit4': if (showAnswer) handleGrade(Grade.Easy); break;
         }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFlipped, word]); // Dependencies needed to capture latest state
+  }, [showAnswer, word]);
 
-  // Reset state when word changes
   useEffect(() => {
-    setIsFlipped(false);
-    setSwipeState({ x: 0, y: 0, rotation: 0, opacity: 1, text: '' });
-    if (recognitionRef.current) recognitionRef.current.stop();
-    setIsListening(false);
-    
-    // Cancel any playing audio when word changes
+    // Reset state on new word
+    setShowAnswer(false);
+    setSwipeState({ x: 0, rotation: 0, opacity: 1, text: '' });
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
         setIsPlaying(false);
     }
   }, [word]);
 
-  const flipCard = () => setIsFlipped(prev => !prev);
+  const handleReveal = () => {
+      playSound('flip');
+      setShowAnswer(true);
+  };
+
+  const handleGrade = (grade: Grade) => {
+      if (grade === Grade.Easy) playSound('victory');
+      else if (grade >= Grade.Good) playSound('success');
+      else playSound('forgot');
+      
+      onResult(grade);
+  };
 
   const handlePlayAudio = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    playSound('click');
+    
     const synth = window.speechSynthesis;
     if (!synth) return;
 
@@ -117,276 +81,243 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
         return; 
     }
     
-    // Reset engine state
     synth.cancel();
-
-    const speak = (text: string, isRetry = false) => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // Critical: Store reference to prevent garbage collection
-        utteranceRef.current = utterance;
-
-        utterance.lang = 'en-US';
-        utterance.rate = 0.8;
-        
-        // Only attempt to set voice on first try to avoid "synthesis-failed" due to bad voice
-        if (!isRetry) {
-            const voices = synth.getVoices();
-            const bestVoice = voices.find(v => v.name.includes('Google US English')) 
-                        || voices.find(v => v.name.includes('Samantha'))
-                        || voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
-            if (bestVoice) utterance.voice = bestVoice;
-        }
-        
-        utterance.onstart = () => setIsPlaying(true);
-        utterance.onend = () => {
-            setIsPlaying(false);
-            utteranceRef.current = null;
-        };
-        utterance.onerror = (event) => {
-            console.error('Speech synthesis error:', event.error);
-            setIsPlaying(false);
-            utteranceRef.current = null;
-
-            // Retry logic for synthesis-failed or network error
-            if ((event.error === 'synthesis-failed' || event.error === 'network') && !isRetry) {
-                console.log('Retrying synthesis with default voice...');
-                synth.cancel(); // Clear the failed state
-                
-                setTimeout(() => {
-                    speak(text, true);
-                }, 100);
-            }
-        };
-        
-        synth.speak(utterance);
-    };
+    const utterance = new SpeechSynthesisUtterance(word.term);
+    utteranceRef.current = utterance;
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85; 
     
-    // Add a small delay to allow the cancel to process and engine to reset
-    // This fixes 'synthesis-failed' on many mobile devices
-    setTimeout(() => {
-        speak(word.term);
-    }, 50);
-  };
+    const voices = synth.getVoices();
+    const bestVoice = voices.find(v => v.name.includes('Google US English')) || voices.find(v => v.lang === 'en-US');
+    if (bestVoice) utterance.voice = bestVoice;
 
-  const handleMicClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const win = window as unknown as IWindow;
-    const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
-    if (!SpeechRecognition) { alert("浏览器不支持"); return; }
-
-    if (isListening) {
-        recognitionRef.current?.stop();
-        setIsListening(false);
-        return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    recognition.lang = 'en-US';
-    recognition.continuous = false;
-    
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onresult = (event: any) => {
-        const text = event.results[event.results.length - 1][0].transcript;
-        const score = calculateSimilarity(word.term, text);
-        alert(`识别: ${text}\n得分: ${score}`);
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => {
+        setIsPlaying(false);
+        utteranceRef.current = null;
     };
-    recognition.start();
+    utterance.onerror = () => setIsPlaying(false);
+    
+    synth.speak(utterance);
   };
 
   // --- Gesture Logic ---
-
   const onTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!showAnswer) {
+        // Allow tracking for tap detection even if not revealed
+        setIsDragging(true);
+        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        startPos.current = { x: clientX, y: 0 };
+        return;
+    }
+
     setIsDragging(true);
     const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-    startPos.current = { x: clientX, y: clientY };
+    startPos.current = { x: clientX, y: 0 };
   };
 
   const onTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
     if (!isDragging) return;
     const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-    
     const deltaX = clientX - startPos.current.x;
-    const deltaY = clientY - startPos.current.y;
-    
-    // Rotation physics: 100px move = 10deg rotation
-    const rotation = deltaX * 0.1;
-    
-    // Feedback text
-    let text = '';
-    if (isFlipped) {
-        if (deltaX > 100) text = '简单';
-        else if (deltaX < -100) text = '忘记';
-        else if (deltaY < -100) text = '记得'; // Up swipe
-    }
 
-    setSwipeState({ x: deltaX, y: deltaY, rotation, opacity: 1, text });
+    if (!showAnswer) {
+        return; // Disable swiping when not revealed
+    }
+    
+    const rotation = deltaX * 0.05;
+    let text = '';
+    
+    if (deltaX > 80) text = '简单';
+    else if (deltaX < -80) text = '忘记';
+
+    setSwipeState(prev => ({ ...prev, x: deltaX, rotation, text }));
   };
 
-  const onTouchEnd = () => {
+  const onTouchEnd = (e: React.TouchEvent | React.MouseEvent) => {
     setIsDragging(false);
-    const { x, y } = swipeState;
+    const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : (e as React.MouseEvent).clientX;
+    const deltaX = clientX - startPos.current.x;
+    
+    if (!showAnswer) {
+        // Tap detection to reveal
+        if (Math.abs(deltaX) < 5) {
+            handleReveal();
+        }
+        return;
+    }
+
+    // Grading logic
+    const { x } = swipeState;
     const threshold = 100;
 
-    // Handle Swipe Actions (Only if flipped)
-    if (isFlipped) {
-        if (x > threshold) {
-            // Swipe Right -> Easy
-            animateOut(500, 0, Grade.Easy);
-            return;
-        } else if (x < -threshold) {
-            // Swipe Left -> Forgot
-            animateOut(-500, 0, Grade.Blackout);
-            return;
-        } else if (y < -threshold) {
-             // Swipe Up -> Good
-             animateOut(0, -500, Grade.Good);
-             return;
-        }
-    } else {
-        // If not flipped, simple tap detection to flip
-        if (Math.abs(x) < 5 && Math.abs(y) < 5) {
-            flipCard();
-        }
+    if (x > threshold) {
+        animateOut(500, Grade.Easy);
+        return;
+    } else if (x < -threshold) {
+        animateOut(-500, Grade.Blackout);
+        return;
     }
-
-    // Reset if threshold not met
-    setSwipeState({ x: 0, y: 0, rotation: 0, opacity: 1, text: '' });
+    
+    // Reset if not swiped far enough
+    setSwipeState({ x: 0, rotation: 0, opacity: 1, text: '' });
   };
 
-  const animateOut = (endX: number, endY: number, grade: Grade) => {
-      setSwipeState(prev => ({ ...prev, x: endX, y: endY, opacity: 0 }));
-      setTimeout(() => {
-          onResult(grade);
-      }, 200);
+  const animateOut = (endX: number, grade: Grade) => {
+      setSwipeState(prev => ({ ...prev, x: endX, opacity: 0 }));
+      handleGrade(grade);
   };
 
   return (
-    <div className="relative w-full max-w-sm mx-auto h-[480px] md:h-[520px] select-none">
+    <div className="relative w-full max-w-sm mx-auto h-[600px] select-none">
         
-        {/* Swipe Feedback Overlay */}
+        {/* Swipe Feedback Badge */}
         {swipeState.text && (
             <div className={clsx(
-                "absolute top-8 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-full font-bold text-xl shadow-lg border-2 animate-in zoom-in-95",
-                swipeState.text === '忘记' && "bg-red-50 text-red-600 border-red-200",
-                swipeState.text === '简单' && "bg-green-50 text-green-600 border-green-200",
-                swipeState.text === '记得' && "bg-blue-50 text-blue-600 border-blue-200",
+                "absolute top-8 left-1/2 -translate-x-1/2 z-50 px-6 py-2 rounded-full font-bold text-xl shadow-xl border-2 transition-all pointer-events-none",
+                swipeState.text === '忘记' ? "bg-red-500 text-white border-red-600" : "bg-green-500 text-white border-green-600",
             )}>
                 {swipeState.text}
             </div>
         )}
 
-        {/* Card Container */}
+        {/* Card Main Container */}
         <div 
             ref={cardRef}
-            className="w-full h-full relative perspective-1000 touch-none"
+            className="w-full h-full bg-white rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] border border-gray-100 flex flex-col overflow-hidden transition-transform duration-100 ease-out"
             style={{
-                transform: `translate3d(${swipeState.x}px, ${swipeState.y}px, 0) rotate(${swipeState.rotation}deg)`,
+                transform: `translate3d(${swipeState.x}px, 0, 0) rotate(${swipeState.rotation}deg)`,
                 opacity: swipeState.opacity,
-                transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s',
                 cursor: isDragging ? 'grabbing' : 'grab'
             }}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-            onMouseDown={onTouchStart}
-            onMouseMove={onTouchMove}
-            onMouseUp={onTouchEnd}
-            onMouseLeave={onTouchEnd}
+            onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+            onMouseDown={onTouchStart} onMouseMove={onTouchMove} onMouseUp={onTouchEnd} onMouseLeave={onTouchEnd}
         >
-             <div className={clsx(
-                "w-full h-full transition-transform duration-500 transform preserve-3d relative bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100",
-                isFlipped ? "rotate-y-180" : ""
+             {/* Decorative Background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 via-white to-white z-0 pointer-events-none" />
+            
+            {/* --- TOP SECTION (Word) --- */}
+            <div className={clsx(
+                "relative z-10 flex flex-col items-center justify-center p-8 transition-all duration-500 ease-out",
+                showAnswer ? "flex-none pt-12 pb-2" : "flex-1"
             )}>
-                
-                {/* Front */}
-                <div className="absolute backface-hidden inset-0 flex flex-col justify-center items-center z-10 p-6">
-                    <div className="flex-1 flex flex-col justify-center items-center w-full">
-                        <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-6">Word</span>
-                        <h2 className="text-5xl font-bold text-gray-800 break-all text-center mb-6">{word.term}</h2>
-                        
-                        {word.phonetic && (
-                            <div className="flex items-center gap-3">
-                                <span className="text-gray-500 font-mono text-lg">{word.phonetic}</span>
-                                <button 
-                                    onMouseDown={(e) => e.stopPropagation()}
-                                    onClick={handlePlayAudio}
-                                    className="p-2 rounded-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                >
-                                    <Volume2 size={24} className={clsx(isPlaying && "animate-pulse")} />
-                                </button>
-                            </div>
-                        )}
+                 <span className="text-xs uppercase tracking-[0.2em] text-indigo-300 font-bold mb-6">Vocabulary</span>
+                 
+                 <h2 className={clsx(
+                     "font-black text-gray-800 tracking-tight leading-tight transition-all duration-500",
+                     showAnswer ? "text-4xl mb-3" : "text-5xl md:text-6xl mb-8"
+                 )}>
+                    {word.term}
+                 </h2>
+                 
+                 {word.phonetic && (
+                    <div 
+                        onClick={handlePlayAudio}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-all group shadow-sm active:scale-95"
+                    >
+                        <span className="font-mono text-gray-500 text-lg group-hover:text-indigo-600 transition-colors">{word.phonetic}</span>
+                        <Volume2 size={18} className={clsx("text-gray-400 group-hover:text-indigo-600", isPlaying && "animate-pulse")} />
                     </div>
-                    
-                    <div className="h-16 flex items-end justify-center pb-4 text-gray-300 text-sm gap-2">
-                        <RotateCw size={16} /> 点击或按空格翻转
-                    </div>
-                </div>
-
-                {/* Back */}
-                <div className="absolute backface-hidden inset-0 flex flex-col z-0 rotate-y-180 bg-slate-50 rounded-3xl overflow-hidden">
-                    <div className="flex-1 p-8 flex flex-col justify-center overflow-y-auto">
-                        <div className="mb-6">
-                            <span className="text-xs uppercase text-gray-400 font-bold tracking-widest">Definition</span>
-                            <p className="text-2xl font-bold text-gray-800 mt-2 leading-relaxed">{word.definition}</p>
-                        </div>
-
-                        {word.exampleSentence && (
-                            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm mb-4">
-                                <p className="text-gray-700 text-lg font-serif italic mb-2">"{word.exampleSentence}"</p>
-                                <p className="text-gray-400 text-sm">{word.exampleTranslation}</p>
-                            </div>
-                        )}
-                         <div className="flex flex-wrap gap-2">
-                            {word.tags.map(tag => (
-                                <span key={tag} className="px-2 py-1 bg-gray-200 text-gray-500 text-xs rounded-md">#{tag}</span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Action Bar (For users who prefer tapping) */}
-                    <div className="h-20 bg-white border-t border-gray-100 grid grid-cols-4 divide-x divide-gray-100" onMouseDown={e => e.stopPropagation()}>
-                         <button onClick={() => onResult(Grade.Blackout)} className="flex flex-col items-center justify-center hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
-                            <RotateCw size={20} />
-                            <span className="text-xs font-bold mt-1">忘 (1)</span>
-                        </button>
-                        <button onClick={() => onResult(Grade.Hard)} className="flex flex-col items-center justify-center hover:bg-orange-50 text-gray-400 hover:text-orange-500 transition-colors">
-                            <Zap size={20} />
-                            <span className="text-xs font-bold mt-1">难 (2)</span>
-                        </button>
-                        <button onClick={() => onResult(Grade.Good)} className="flex flex-col items-center justify-center hover:bg-blue-50 text-gray-400 hover:text-blue-500 transition-colors">
-                            <ThumbsUp size={20} />
-                            <span className="text-xs font-bold mt-1">记 (3)</span>
-                        </button>
-                        <button onClick={() => onResult(Grade.Easy)} className="flex flex-col items-center justify-center hover:bg-green-50 text-gray-400 hover:text-green-500 transition-colors">
-                            <ThumbsUp size={20} className="text-green-500" />
-                            <span className="text-xs font-bold mt-1">简 (4)</span>
-                        </button>
-                    </div>
-                </div>
+                )}
             </div>
-        </div>
 
-        {/* Gesture Hints (Only visible when flipped) */}
-        {isFlipped && (
-            <>
-                <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-12 hidden md:flex flex-col items-center text-gray-300">
-                    <div className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center mb-2"><RotateCw size={16}/></div>
-                    <span className="text-xs font-bold">左滑忘记</span>
+            {/* --- MIDDLE SECTION (Answer / Reveal Prompt) --- */}
+            {showAnswer ? (
+                <div className="relative z-10 flex-1 overflow-y-auto px-6 pb-4 custom-scrollbar">
+                    <div className="text-center mb-6">
+                        <h3 className="text-xl md:text-2xl font-bold text-gray-700 leading-relaxed">
+                            {word.definition}
+                        </h3>
+                    </div>
+
+                    {word.exampleSentence && (
+                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shadow-sm mb-6 text-left">
+                            <div className="flex gap-3 mb-2">
+                                <div className="w-1 h-auto bg-indigo-400 rounded-full flex-none"></div>
+                                <p className="text-gray-700 text-lg font-serif italic leading-relaxed">
+                                    "{word.exampleSentence}"
+                                </p>
+                            </div>
+                            <p className="text-gray-400 text-sm pl-4">{word.exampleTranslation}</p>
+                        </div>
+                    )}
+                    
+                    <div className="flex flex-wrap gap-2 justify-center mb-4">
+                        {word.tags.map(tag => (
+                            <span key={tag} className="px-2.5 py-1 bg-white border border-gray-200 text-gray-400 text-xs font-medium rounded-md">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-                 <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-12 hidden md:flex flex-col items-center text-gray-300">
-                    <div className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center mb-2"><ThumbsUp size={16}/></div>
-                    <span className="text-xs font-bold">右滑简单</span>
+            ) : (
+                <div className="relative z-10 flex-none pb-20 flex items-center justify-center animate-pulse">
+                    <div className="flex flex-col items-center gap-2 text-indigo-300">
+                        <Eye size={24} />
+                        <span className="text-sm font-medium">点击查看释义</span>
+                    </div>
                 </div>
-            </>
-        )}
+            )}
+
+            {/* --- BOTTOM SECTION (Grading) --- */}
+            {showAnswer && (
+                <div 
+                    className="relative z-20 flex-none bg-white border-t border-gray-100 p-3 grid grid-cols-4 gap-2 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]" 
+                    onMouseDown={e => e.stopPropagation()}
+                    onTouchStart={e => e.stopPropagation()}
+                >
+                    <GradeButton 
+                        grade={Grade.Blackout} 
+                        label="忘记" 
+                        subLabel="1"
+                        icon={<XCircle size={20} />}
+                        color="text-rose-500 bg-rose-50 hover:bg-rose-100 border-rose-100"
+                        onClick={() => handleGrade(Grade.Blackout)}
+                    />
+                    <GradeButton 
+                        grade={Grade.Hard} 
+                        label="困难" 
+                        subLabel="2"
+                        icon={<Brain size={20} />}
+                        color="text-amber-600 bg-amber-50 hover:bg-amber-100 border-amber-100"
+                        onClick={() => handleGrade(Grade.Hard)}
+                    />
+                    <GradeButton 
+                        grade={Grade.Good} 
+                        label="记得" 
+                        subLabel="3"
+                        icon={<CheckCircle2 size={20} />}
+                        color="text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-100"
+                        onClick={() => handleGrade(Grade.Good)}
+                    />
+                    <GradeButton 
+                        grade={Grade.Easy} 
+                        label="简单" 
+                        subLabel="4"
+                        icon={<Sparkles size={20} />}
+                        color="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border-emerald-100"
+                        onClick={() => handleGrade(Grade.Easy)}
+                    />
+                </div>
+            )}
+        </div>
     </div>
   );
 };
+
+// Sub-component for buttons
+const GradeButton = ({ grade, label, subLabel, icon, color, onClick }: any) => (
+    <button 
+        onClick={onClick} 
+        className={clsx(
+            "flex flex-col items-center justify-center py-3 rounded-xl border transition-all active:scale-95 duration-200",
+            color
+        )}
+    >
+        <div className="mb-1">{icon}</div>
+        <span className="text-xs font-bold">{label}</span>
+        <span className="text-[10px] opacity-60 font-mono mt-0.5">{subLabel}d</span>
+    </button>
+);
 
 export default Flashcard;
