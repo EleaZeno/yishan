@@ -28,7 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-indigo-200 shadow-sm">
                 忆
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-gray-800">YiShan</h1>
+            <h1 className="text-xl font-bold tracking-tight text-gray-800">忆闪 YiShan</h1>
             {user && (
                  <span className="hidden sm:inline-block ml-2 px-2 py-0.5 bg-indigo-50 text-indigo-600 text-xs rounded-full font-medium border border-indigo-100">
                     Cloud
