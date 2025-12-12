@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       rollupOptions: {
         // Externalize deps so they are loaded via importmap (CDN) instead of bundled
-        external: ['react', 'react-dom', 'react-dom/client', 'lucide-react', 'recharts', 'clsx'],
+        external: ['react', 'react-dom', 'react-dom/client', 'lucide-react', 'recharts', 'clsx', 'framer-motion'],
       }
     }
   };

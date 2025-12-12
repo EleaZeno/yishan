@@ -89,7 +89,8 @@ const App: React.FC = () => {
         totalWords: statsWords.length, // Approximation in cloud mode
         dueToday: due.length,
         learned: statsWords.filter(w => w.interval > 1).length,
-        retentionRate: statsWords.length > 0 ? Math.round((statsWords.filter(w => w.easiness > 2.5).length / statsWords.length) * 100) : 0
+        // Use average strength for retention rate. Strength is 0-1.
+        retentionRate: statsWords.length > 0 ? Math.round((statsWords.reduce((acc, w) => acc + (w.strength || 0), 0) / statsWords.length) * 100) : 0
       });
 
     } catch (e) {
