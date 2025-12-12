@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Word, Grade, IWindow } from '../types';
 import { Eye, Volume2, Mic, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
-import { fetchWordAudio } from '../services/geminiService';
 
 interface FlashcardProps {
   word: Word;
@@ -36,36 +35,19 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
     }
   }, []);
 
-  const handlePlayAudio = async (e: React.MouseEvent) => {
+  const handlePlayAudio = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isPlaying) return;
     
     setIsPlaying(true);
-    try {
-        const pcmBuffer = await fetchWordAudio(word.term);
-        
-        // Gemini TTS returns raw PCM data (1 channel, 24kHz, 16-bit little-endian)
-        // We must decode it manually as browser's decodeAudioData expects file headers (wav/mp3)
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        const ctx = new AudioContextClass({ sampleRate: 24000 });
-        
-        const dataInt16 = new Int16Array(pcmBuffer);
-        const audioBuffer = ctx.createBuffer(1, dataInt16.length, 24000);
-        const channelData = audioBuffer.getChannelData(0);
-        
-        for (let i = 0; i < dataInt16.length; i++) {
-            channelData[i] = dataInt16[i] / 32768.0;
-        }
-
-        const source = ctx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(ctx.destination);
-        source.onended = () => setIsPlaying(false);
-        source.start(0);
-    } catch (err) {
-        console.error("Audio playback failed", err);
-        setIsPlaying(false);
-    }
+    
+    // 使用浏览器原生 TTS
+    const utterance = new SpeechSynthesisUtterance(word.term);
+    utterance.lang = 'en-US';
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
+    
+    window.speechSynthesis.speak(utterance);
   };
 
   const stopRecognition = () => {

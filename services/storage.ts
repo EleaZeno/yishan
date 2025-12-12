@@ -58,9 +58,6 @@ export const db = {
             const res = await apiAdapter.fetchWithAuth(API_BASE);
             return res.sort((a: Word, b: Word) => b.createdAt - a.createdAt);
         } catch (e) {
-            // Fallback to local if network fails, or just return empty/error depending on UX policy
-            // For now, let's allow read-only fallback if desired, or re-throw.
-            // Throwing ensures user knows they are offline.
             throw e;
         }
     }
@@ -117,17 +114,18 @@ export const db = {
     }
   },
   
-  // Import (Not fully implemented on API side for batch)
+  // Import
   importWords: async (words: Word[]): Promise<void> => {
     if (db.isGuestMode()) {
         const existing = localAdapter.getWords();
         const newBatch = [...existing, ...words];
         localAdapter.saveWords(newBatch);
     } else {
-        // Implement batch API call if needed
-        for (const w of words) {
-            await db.addWord(w);
-        }
+        // Use batch API for better performance
+        await apiAdapter.fetchWithAuth(`${API_BASE}/batch`, {
+            method: 'POST',
+            body: JSON.stringify(words)
+        });
     }
   }
 };

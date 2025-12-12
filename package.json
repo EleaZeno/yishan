@@ -14,7 +14,6 @@
     "db:init:prod": "npx wrangler d1 execute yishan-db --remote --file=./schema.sql"
   },
   "dependencies": {
-    "@google/genai": "^1.32.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

@@ -7,8 +7,9 @@ import AuthPage from './components/AuthPage';
 import { Word, Grade, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
-import { calculateReview } from './lib/sm2';
-import { Loader2, Plus, Search, Trash2, CalendarClock } from 'lucide-react';
+import { calculateReview, getInitialWordState } from './lib/sm2';
+import { Loader2, Plus, Search, Trash2, CalendarClock, BookDown } from 'lucide-react';
+import { getCoreVocabulary } from './data/vocabulary';
 
 const App: React.FC = () => {
   // Auth State
@@ -27,6 +28,8 @@ const App: React.FC = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  
+  const [isImporting, setIsImporting] = useState(false);
 
   // Check Auth on Mount
   useEffect(() => {
@@ -57,12 +60,6 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
         loadData();
-    } else {
-        // Guest mode support?
-        // If we want to allow guest mode without login immediately:
-        // loadData(); 
-        // But logic below handles "AuthPage" rendering.
-        // Let's rely on `isAuthenticated` state.
     }
   }, [isAuthenticated, loadData]);
 
@@ -99,6 +96,31 @@ const App: React.FC = () => {
         loadData();
     }
   }
+  
+  const handleImportCore = async () => {
+      if (!confirm('确定要导入50个核心词汇到你的词库吗？')) return;
+      setIsImporting(true);
+      try {
+          const vocab = getCoreVocabulary().map(v => ({
+            ...v,
+            id: crypto.randomUUID(),
+            term: v.term!,
+            definition: v.definition!,
+            tags: v.tags!,
+            ...getInitialWordState(),
+            createdAt: Date.now()
+          } as Word));
+          
+          await db.importWords(vocab);
+          await loadData();
+          alert('导入成功！');
+      } catch (e) {
+          alert('导入失败，请重试');
+          console.error(e);
+      } finally {
+          setIsImporting(false);
+      }
+  };
 
   const startSession = () => {
     if (dueWords.length === 0) return;
@@ -210,13 +232,25 @@ const App: React.FC = () => {
                     <Search size={32} />
                 </div>
                 <h2 className="text-xl font-bold text-gray-800">没有待复习的单词</h2>
-                <p className="text-gray-500 mt-2">去词库添加一些新单词吧！</p>
-                <button 
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium"
-                >
-                    添加单词
-                </button>
+                <p className="text-gray-500 mt-2">去词库添加或导入一些新单词吧！</p>
+                
+                <div className="flex gap-4 mt-8">
+                     <button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        添加单词
+                    </button>
+                    <button 
+                        onClick={handleImportCore}
+                        disabled={isImporting}
+                        className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50"
+                    >
+                        {isImporting ? <Loader2 size={18} className="animate-spin"/> : <BookDown size={18} />}
+                        导入核心词库
+                    </button>
+                </div>
              </div>
         );
     }
@@ -248,15 +282,25 @@ const App: React.FC = () => {
 
     return (
         <div className="space-y-4 h-full flex flex-col">
-            <div className="relative">
-                <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-                <input 
-                    type="text" 
-                    placeholder="搜索单词..." 
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
-                />
+            <div className="flex gap-2">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+                    <input 
+                        type="text" 
+                        placeholder="搜索单词..." 
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+                    />
+                </div>
+                <button 
+                    onClick={handleImportCore}
+                    disabled={isImporting}
+                    className="px-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-indigo-600 font-medium flex items-center gap-2 whitespace-nowrap shadow-sm"
+                >
+                    {isImporting ? <Loader2 size={18} className="animate-spin"/> : <BookDown size={18} />}
+                    <span className="hidden sm:inline">导入词库</span>
+                </button>
             </div>
             
             <div className="flex-1 overflow-y-auto space-y-3 pb-20">
