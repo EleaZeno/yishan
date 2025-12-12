@@ -23,6 +23,6 @@ CREATE TABLE words (
   created_at INTEGER NOT NULL
 );
 
--- 索引优化
+-- 索引优化，加快查询速度
 CREATE INDEX idx_words_user_due ON words(user_id, due_date);
 CREATE INDEX idx_users_email ON users(email);
