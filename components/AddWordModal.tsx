@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Loader2, Save, BookOpen } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Sparkles, Loader2, Save } from 'lucide-react';
 import { Word, AIWordInfo } from '../types';
 import { getInitialWordState } from '../lib/sm2';
 import { fetchWordDetails } from '../services/geminiService';
-import { JUNIOR_HIGH_WORDS } from '../data/presets';
 
 interface AddWordModalProps {
   isOpen: boolean;
@@ -20,28 +19,6 @@ const AddWordModal: React.FC<AddWordModalProps> = ({ isOpen, onClose, onSave }) 
   const [tags, setTags] = useState('');
   
   const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [isFromPreset, setIsFromPreset] = useState(false);
-
-  // Watch for term changes to auto-fill from local dictionary
-  useEffect(() => {
-    if (!term) {
-        setIsFromPreset(false);
-        return;
-    }
-    
-    // Simple exact match case-insensitive lookup
-    const found = JUNIOR_HIGH_WORDS.find(w => w.term.toLowerCase() === term.toLowerCase().trim());
-    if (found) {
-        setDefinition(found.definition);
-        setExample(found.exampleSentence);
-        setTranslation(found.exampleTranslation);
-        setPhonetic(found.phonetic);
-        setTags(found.tags.join(', '));
-        setIsFromPreset(true);
-    } else {
-        setIsFromPreset(false);
-    }
-  }, [term]);
 
   if (!isOpen) return null;
 
@@ -55,7 +32,6 @@ const AddWordModal: React.FC<AddWordModalProps> = ({ isOpen, onClose, onSave }) 
       setTranslation(info.exampleTranslation);
       setPhonetic(info.phonetic);
       setTags(info.tags.join(', '));
-      setIsFromPreset(false); // Overridden by AI
     } catch (err) {
       alert("AI 生成失败，请检查网络或 API Key");
     } finally {
@@ -90,7 +66,6 @@ const AddWordModal: React.FC<AddWordModalProps> = ({ isOpen, onClose, onSave }) 
       setTranslation('');
       setPhonetic('');
       setTags('');
-      setIsFromPreset(false);
   };
 
   return (
@@ -106,37 +81,24 @@ const AddWordModal: React.FC<AddWordModalProps> = ({ isOpen, onClose, onSave }) 
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">单词 / 词组</label>
-            <div className="flex gap-2 relative">
+            <div className="flex gap-2">
               <input 
                 type="text" 
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                placeholder="例如: apple"
+                placeholder="例如: Serendipity"
                 autoFocus
               />
               <button 
                 onClick={handleAiFill}
-                disabled={!term || isLoadingAI || isFromPreset}
-                className={`
-                    px-4 py-2 text-white rounded-lg flex items-center gap-2 font-medium transition-all
-                    ${isFromPreset 
-                        ? 'bg-emerald-500 opacity-50 cursor-not-allowed' // Disabled visual style
-                        : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:opacity-90'
-                    }
-                `}
-                title={isFromPreset ? "已从本地词库填充" : "使用 AI 生成"}
+                disabled={!term || isLoadingAI}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg flex items-center gap-2 font-medium hover:opacity-90 disabled:opacity-50 transition-all"
               >
                 {isLoadingAI ? <Loader2 size={18} className="animate-spin"/> : <Sparkles size={18} />}
                 <span className="hidden sm:inline">AI 生成</span>
               </button>
             </div>
-            {isFromPreset && (
-                <div className="mt-2 text-xs text-emerald-600 flex items-center gap-1 font-medium animate-in fade-in slide-in-from-bottom-2">
-                    <BookOpen size={14} />
-                    <span>已自动匹配本地初中词库</span>
-                </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

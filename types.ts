@@ -18,16 +18,6 @@ export interface Word {
   createdAt: number;
 }
 
-// 静态词库数据结构
-export interface PresetWord {
-  term: string;
-  phonetic: string;
-  definition: string;
-  exampleSentence: string;
-  exampleTranslation: string;
-  tags: string[];
-}
-
 // 复习反馈等级 (0-5)
 export enum Grade {
   Blackout = 0, // 完全忘记
