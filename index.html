@@ -25,6 +25,11 @@
         -webkit-overflow-scrolling: auto;
         font-family: 'Inter', 'Noto Sans SC', sans-serif;
         background-color: #f9fafb; /* bg-gray-50 */
+        
+        /* 关键：移除移动端点击高亮，提升原生感 */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        user-select: none;
       }
       
       #root {
@@ -51,6 +56,12 @@
       .no-scrollbar {
         -ms-overflow-style: none;
         scrollbar-width: none;
+      }
+
+      /* Input elements should allow selection */
+      input, textarea {
+        user-select: text;
+        -webkit-user-select: text;
       }
     </style>
   <script type="importmap">

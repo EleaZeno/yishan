@@ -11,6 +11,13 @@ interface FlashcardProps {
   isFront?: boolean; // Used for the background stack card
 }
 
+// Helper for vibration
+const triggerHaptic = (pattern: number | number[] = 10) => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(pattern);
+    }
+};
+
 const Flashcard: React.FC<FlashcardProps> = ({ word, onResult, isFront = true }) => {
   const [flipped, setFlipped] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,7 +35,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult, isFront = true })
   const leftOpacity = useTransform(x, [-150, -50], [1, 0]);
   
   // Card scale/opacity while dragging (optional subtle effect)
-  const scale = useTransform(x, [-200, 0, 200], [1, 1, 1]);
+  const scale = useTransform(x, [-200, 0, 200], [0.95, 1, 0.95]);
 
   useEffect(() => {
     startTimeRef.current = Date.now();
@@ -41,6 +48,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult, isFront = true })
   const handlePlayAudio = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     setAudioCount(prev => prev + 1);
+    // Audio trigger on click is usually fine, but let's be safe
     playSound('click');
     
     if (!window.speechSynthesis) return;
@@ -65,48 +73,63 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult, isFront = true })
         if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
         if (e.code === 'Space' || e.code === 'Enter') {
             e.preventDefault();
-            setFlipped(prev => !prev);
-            playSound('flip');
+            handleFlip();
         } else if (e.code === 'ArrowLeft') {
-            flyOut(-300);
+            triggerSwipe('left');
         } else if (e.code === 'ArrowRight') {
-            flyOut(300);
+            triggerSwipe('right');
         } else if (e.code === 'KeyS') {
             handlePlayAudio();
         }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFront, word]);
+  }, [isFront, word, flipped]);
+
+  const handleFlip = () => {
+      setFlipped(prev => !prev);
+      playSound('flip');
+      triggerHaptic(5); // Light tap
+  };
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipeThreshold = 100;
     const velocityThreshold = 500;
     
+    // Determine direction based on drag
     if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
-        flyOut(400); // Swipe Right (Remember)
+        triggerSwipe('right');
     } else if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
-        flyOut(-400); // Swipe Left (Forget)
+        triggerSwipe('left');
     } else {
         // Spring back
         animate(x, 0, { type: "spring", stiffness: 400, damping: 25 });
     }
   };
 
-  const flyOut = (targetX: number) => {
-    animate(x, targetX, { 
+  // Centralized swipe trigger to ensure sound plays immediately (Crucial for Safari)
+  const triggerSwipe = (direction: 'left' | 'right') => {
+      const targetX = direction === 'right' ? 400 : -400;
+      
+      // 1. Play Sound & Haptic IMMEDIATELLY (Synchronous to event loop)
+      if (direction === 'right') {
+          playSound('success');
+          triggerHaptic([10, 30, 10]); // Success pattern
+      } else {
+          playSound('forgot');
+          triggerHaptic(20); // Heavy tap
+      }
+
+      // 2. Start Animation
+      animate(x, targetX, { 
         duration: 0.2, 
         ease: "easeOut",
-        onComplete: () => completeInteraction(targetX > 0 ? 'right' : 'left')
+        onComplete: () => completeInteraction(direction)
     });
   };
 
   const completeInteraction = (direction: 'left' | 'right') => {
       const durationMs = Date.now() - startTimeRef.current;
-      
-      if (direction === 'right') playSound('success');
-      else playSound('forgot');
-
       onResult({
           durationMs,
           flipped,
@@ -157,7 +180,10 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult, isFront = true })
         </div>
 
         {/* Content Scroll Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar -mr-4 pr-4">
+        <div 
+            className="flex-1 overflow-y-auto custom-scrollbar -mr-4 pr-4"
+            onPointerDownCapture={e => e.stopPropagation()} // Allow scrolling text without dragging card
+        >
             <div className="mb-6">
                 <div className="text-xs font-bold text-gray-400 uppercase mb-1">Definition</div>
                 <p className="text-xl text-gray-700 font-medium leading-relaxed">{word.definition}</p>
@@ -206,15 +232,18 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult, isFront = true })
   return (
     <motion.div
         className="absolute top-0 left-0 w-full h-full cursor-grab active:cursor-grabbing perspective-1000 touch-none"
-        style={{ x, rotate, scale, zIndex: 10 }}
+        style={{ 
+            x, 
+            rotate, 
+            scale, 
+            zIndex: 10,
+            willChange: "transform" // Critical for mobile performance
+        }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1} // Resistance feel
+        dragElastic={0.05} // Tighter drag feel
         onDragEnd={handleDragEnd}
-        onClick={() => { 
-            setFlipped(!flipped); 
-            playSound('flip');
-        }}
+        onClick={handleFlip}
     >
         {/* Color Overlays for Feedback */}
         <motion.div style={{ opacity: rightOpacity }} className="absolute inset-0 z-30 bg-green-500/20 rounded-[2rem] pointer-events-none border-4 border-green-500" />
@@ -230,8 +259,15 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult, isFront = true })
 
         {/* 3D Flipping Container */}
         <motion.div 
-            className="relative w-full h-full preserve-3d transition-transform duration-500"
+            className="relative w-full h-full preserve-3d"
+            initial={false}
             animate={{ rotateY: flipped ? 180 : 0 }}
+            transition={{ 
+                type: "spring", 
+                stiffness: 260, 
+                damping: 20,
+                mass: 0.8
+            }} // Snappy spring animation
         >
             <FrontFace />
             <BackFace />
