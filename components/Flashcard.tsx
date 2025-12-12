@@ -110,7 +110,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
     e?.stopPropagation();
     const synth = window.speechSynthesis;
     if (!synth) {
-        alert("Your browser does not support Text-to-Speech.");
+        // Browser doesn't support TTS
         return;
     }
 
@@ -120,37 +120,57 @@ const Flashcard: React.FC<FlashcardProps> = ({ word, onResult }) => {
         return; 
     }
     
-    // Cancel any previous utterances
+    // Reset engine state
     synth.cancel();
     
-    const utterance = new SpeechSynthesisUtterance(word.term);
-    // Keep reference to prevent garbage collection
-    utteranceRef.current = utterance;
+    // Add a small delay to allow the cancel to process and engine to reset
+    // This fixes 'synthesis-failed' on many mobile devices
+    setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(word.term);
+        // Keep reference to prevent garbage collection which causes events to not fire
+        utteranceRef.current = utterance;
 
-    utterance.lang = 'en-US';
-    utterance.rate = 0.8;
-    
-    // Attempt to select a better voice
-    const voices = synth.getVoices();
-    const bestVoice = voices.find(v => v.name.includes('Google US English')) 
-                   || voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
-    if (bestVoice) utterance.voice = bestVoice;
-    
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => {
-        setIsPlaying(false);
-        utteranceRef.current = null;
-    };
-    utterance.onerror = (event) => {
-        // Log actual error for debugging
-        if (event.error !== 'interrupted' && event.error !== 'canceled') {
-            console.error('Speech synthesis error:', event.error);
-        }
-        setIsPlaying(false);
-        utteranceRef.current = null;
-    };
-    
-    synth.speak(utterance);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.8;
+        
+        // Attempt to select a better voice
+        const voices = synth.getVoices();
+        const bestVoice = voices.find(v => v.name.includes('Google US English')) 
+                    || voices.find(v => v.name.includes('Samantha'))
+                    || voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
+        if (bestVoice) utterance.voice = bestVoice;
+        
+        utterance.onstart = () => setIsPlaying(true);
+        utterance.onend = () => {
+            setIsPlaying(false);
+            utteranceRef.current = null;
+        };
+        utterance.onerror = (event) => {
+            if (event.error !== 'interrupted' && event.error !== 'canceled') {
+                console.error('Speech synthesis error:', event.error);
+                
+                // Retry logic for synthesis-failed
+                if (event.error === 'synthesis-failed') {
+                    console.log('Retrying synthesis...');
+                    setIsPlaying(false); // Reset UI
+                    synth.cancel();
+                    
+                    setTimeout(() => {
+                        const retryUtterance = new SpeechSynthesisUtterance(word.term);
+                        retryUtterance.lang = 'en-US';
+                        // Don't assign specific voice on retry to let browser use default
+                        synth.speak(retryUtterance);
+                    }, 100);
+                }
+            }
+            if (event.error !== 'synthesis-failed') {
+                setIsPlaying(false);
+                utteranceRef.current = null;
+            }
+        };
+        
+        synth.speak(utterance);
+    }, 50);
   };
 
   const handleMicClick = (e: React.MouseEvent) => {
