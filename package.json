@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:all": "echo 'Starting local dev server with Functions & D1 support...' && npx wrangler pages dev --proxy 5173 -- npm run dev",
+    "dev:all": "npx wrangler pages dev --proxy 5173 -- npm run dev",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && npx wrangler pages deploy dist",
+    "deploy": "npm run build && npx wrangler pages deploy",
     "db:create": "npx wrangler d1 create yishan-db",
     "db:init": "npx wrangler d1 execute yishan-db --local --file=./schema.sql",
     "db:init:prod": "npx wrangler d1 execute yishan-db --remote --file=./schema.sql"
