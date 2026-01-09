@@ -70,7 +70,8 @@ const StudySession: React.FC<StudySessionProps> = ({
     const currentWord = sessionWords[currentIndex];
     if (!currentWord || isFinished) return;
 
-    const dirValue = direction === 'right' ? 1 : -1;
+    // 对调方向值
+    const dirValue = direction === 'left' ? 1 : -1;
     setSwipeDir(dirValue);
 
     const { weight, stability, dueDate } = evaluateInteraction(currentWord, metrics);
@@ -86,7 +87,8 @@ const StudySession: React.FC<StudySessionProps> = ({
 
     db.updateWord(updatedWord).then(() => onUpdateWord(updatedWord)).catch(console.error);
 
-    if (direction === 'right') {
+    // 左滑视为“掌握”，触发完成和下一张
+    if (direction === 'left') {
         setCompletedSet(prev => new Set(prev).add(currentWord.id));
         
         if (metrics.durationMs < 1000 && !metrics.isFlipped) {
@@ -101,7 +103,11 @@ const StudySession: React.FC<StudySessionProps> = ({
             setTimeout(() => setIsFinished(true), 300);
         }
     } else {
+        // 右滑视为“不熟悉”
         playSound('forgot');
+        // 如果右滑，通常在背单词应用中我们会让它稍后再出现，
+        // 这里为了对调逻辑，我们保持原来的“倒退”或者留在原地逻辑。
+        // 但为了更好的体验，右滑通常也应该能切换卡片（这里先严格遵循对调要求）
         if (currentIndex > 0) {
             setTimeout(() => setCurrentIndex(prev => prev - 1), 50);
         } else {
@@ -206,7 +212,6 @@ const StudySession: React.FC<StudySessionProps> = ({
             </div>
          </div>
 
-         {/* 容器高度自适应优化 */}
          <div className="flex-1 relative w-full perspective-1000 overflow-visible min-h-[400px] md:min-h-[550px] max-h-[700px]">
             <AnimatePresence initial={false} custom={swipeDir} mode="popLayout">
                 <motion.div
@@ -229,11 +234,11 @@ const StudySession: React.FC<StudySessionProps> = ({
          <div className="flex-none mt-8 md:mt-12 flex justify-center text-slate-300 gap-8 md:gap-16">
              <div className="flex flex-col items-center gap-2 opacity-50">
                 <ChevronLeft size={20} className="animate-pulse" />
-                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">左滑 / 键盘左: 不熟</span>
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">左滑 / 键盘左: 掌握</span>
              </div>
              <div className="flex flex-col items-center gap-2 opacity-50">
                 <ChevronRight size={20} className="animate-pulse" />
-                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">右滑 / 键盘右: 掌握</span>
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">右滑 / 键盘右: 不熟</span>
              </div>
          </div>
     </div>

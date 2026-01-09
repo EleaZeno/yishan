@@ -1,5 +1,4 @@
 
-
 export interface D1Result<T = unknown> {
   results: T[];
   success: boolean;
@@ -7,7 +6,6 @@ export interface D1Result<T = unknown> {
   error?: string;
 }
 
-// Added Cloudflare D1 type definitions to resolve the compiler errors
 export interface D1PreparedStatement {
   bind(...values: any[]): D1PreparedStatement;
   first<T = unknown>(column?: string): Promise<T | null>;
@@ -44,15 +42,11 @@ export type PagesFunction<
 
 let isDbInitialized = false;
 
-/**
- * 替代 schema.sql 的方案：代码内自动初始化
- * 每次 API 调用都会尝试运行（由于有 IF NOT EXISTS，性能损耗极小）
- */
 export async function ensureTables(db: D1Database) {
     if (isDbInitialized) return;
     
     try {
-        // 1. 创建用户表
+        // 用户表
         await db.prepare(`
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
@@ -63,7 +57,7 @@ export async function ensureTables(db: D1Database) {
             )
         `).run();
 
-        // 2. 创建单词表 (增加 idx 以优化复习查询)
+        // 单词表 - 字段与前端模型同步
         await db.prepare(`
             CREATE TABLE IF NOT EXISTS words (
                 id TEXT PRIMARY KEY,
@@ -74,21 +68,21 @@ export async function ensureTables(db: D1Database) {
                 example_sentence TEXT,
                 example_translation TEXT,
                 tags TEXT,
-                strength REAL DEFAULT 0,
-                interval INTEGER DEFAULT 0,
+                weight REAL DEFAULT 0.2,
+                stability INTEGER DEFAULT 0,
                 due_date INTEGER,
-                repetitions INTEGER DEFAULT 0,
+                last_seen INTEGER,
+                total_exposure INTEGER DEFAULT 0,
                 created_at INTEGER,
                 is_deleted INTEGER DEFAULT 0
             )
         `).run();
 
-        // 3. 确保索引存在
         await db.prepare(`CREATE INDEX IF NOT EXISTS idx_words_user_due ON words(user_id, due_date, is_deleted)`).run();
         
         isDbInitialized = true;
     } catch (e) {
-        console.error("D1 Auto-Init Error:", e);
+        console.error("D1 Init Failed:", e);
     }
 }
 

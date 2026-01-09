@@ -1,5 +1,10 @@
 {
-  "name": "忆闪 (YiShan) - 记忆专家",
-  "description": "基于经典 SM-2 算法的纯净单词记忆应用。多平台适配，利用遗忘曲线科学背词。",
+  "name": "忆闪 YiShan",
+  "short_name": "忆闪",
+  "description": "基于认知交互流的科学记忆工具。利用 Flux-v4 算法，实现真正意义上的无感掌握评估。",
+  "theme_color": "#4f46e5",
+  "background_color": "#fcfdfe",
+  "display": "standalone",
+  "orientation": "portrait",
   "requestFramePermissions": []
 }

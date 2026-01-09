@@ -23,41 +23,47 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         if (mode === 'study') {
             const now = Date.now();
             const { results } = await env.DB.prepare(
-                'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0 AND due_date <= ? ORDER BY due_date ASC LIMIT 100'
+                'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0 AND due_date <= ? ORDER BY due_date ASC LIMIT 50'
             ).bind(user.sub, now).all();
+            
             return jsonResponse(results.map((r: any) => ({
-                ...r, 
-                weight: r.strength, 
-                stability: r.interval, 
-                totalExposure: r.repetitions, 
+                id: r.id,
+                term: r.term,
+                definition: r.definition,
+                phonetic: r.phonetic,
+                exampleSentence: r.example_sentence,
+                exampleTranslation: r.example_translation,
+                tags: r.tags ? JSON.parse(r.tags) : [],
+                weight: r.weight,
+                stability: r.stability,
                 dueDate: r.due_date,
-                tags: r.tags ? JSON.parse(r.tags) : []
+                lastSeen: r.last_seen,
+                totalExposure: r.total_exposure,
+                createdAt: r.created_at
             })));
         } else {
             const page = parseInt(url.searchParams.get('page') || '1');
             const limit = parseInt(url.searchParams.get('limit') || '20');
-            const search = url.searchParams.get('search') || '';
             const offset = (page - 1) * limit;
 
-            let query = 'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0';
-            const params: any[] = [user.sub];
+            const { results } = await env.DB.prepare(
+                'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?'
+            ).bind(user.sub, limit, offset).all();
 
-            if (search) {
-                query += ' AND (term LIKE ? OR definition LIKE ?)';
-                params.push(`%${search}%`, `%${search}%`);
-            }
-
-            query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-            params.push(limit, offset);
-
-            const { results } = await env.DB.prepare(query).bind(...params).all();
             return jsonResponse(results.map((r: any) => ({
-                ...r, 
-                weight: r.strength, 
-                stability: r.interval, 
-                totalExposure: r.repetitions, 
+                id: r.id,
+                term: r.term,
+                definition: r.definition,
+                phonetic: r.phonetic,
+                exampleSentence: r.example_sentence,
+                exampleTranslation: r.example_translation,
+                tags: r.tags ? JSON.parse(r.tags) : [],
+                weight: r.weight,
+                stability: r.stability,
                 dueDate: r.due_date,
-                tags: r.tags ? JSON.parse(r.tags) : []
+                lastSeen: r.last_seen,
+                totalExposure: r.total_exposure,
+                createdAt: r.created_at
             })));
         }
     } catch (e: any) {
@@ -75,25 +81,21 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const word = await request.json() as any;
         if (!word.id || !word.term) return jsonResponse({ error: 'Invalid data' }, 400);
 
-        // 检查是否已存在
-        const existing = await env.DB.prepare('SELECT id FROM words WHERE user_id = ? AND term = ? AND is_deleted = 0').bind(user.sub, word.term).first();
-        if (existing) return jsonResponse({ error: 'Word already in your library' }, 409);
-
-        // Map frontend properties to DB columns
         await env.DB.prepare(
             `INSERT INTO words (
                 id, user_id, term, definition, phonetic, example_sentence, 
-                example_translation, tags, strength, interval, due_date, 
-                repetitions, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                example_translation, tags, weight, stability, due_date, 
+                last_seen, total_exposure, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
             word.id, user.sub, word.term, word.definition, word.phonetic || null,
             word.exampleSentence || null, word.exampleTranslation || null,
             JSON.stringify(word.tags || []), 
-            word.weight || 0, // Map weight -> strength
-            word.stability || 0, // Map stability -> interval
-            word.dueDate || Date.now(), // Map dueDate -> due_date
-            word.totalExposure || 0, // Map totalExposure -> repetitions
+            word.weight || 0.2, 
+            word.stability || 0, 
+            word.dueDate || Date.now(), 
+            word.lastSeen || 0,
+            word.totalExposure || 0,
             word.createdAt || Date.now()
         ).run();
 

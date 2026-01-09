@@ -19,12 +19,11 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     const id = params.id as string;
     const word = await request.json() as any;
 
-    // Map frontend properties to DB columns
     const res = await env.DB.prepare(
         `UPDATE words SET 
             term = ?, definition = ?, phonetic = ?, example_sentence = ?, 
-            example_translation = ?, tags = ?, strength = ?, interval = ?, 
-            due_date = ?, repetitions = ? 
+            example_translation = ?, tags = ?, weight = ?, stability = ?, 
+            due_date = ?, last_seen = ?, total_exposure = ? 
          WHERE id = ? AND user_id = ?`
     ).bind(
         word.term, 
@@ -33,10 +32,11 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         word.exampleSentence,
         word.exampleTranslation, 
         JSON.stringify(word.tags), 
-        word.weight, // Map weight -> strength
-        word.stability, // Map stability -> interval
-        word.dueDate, // Map dueDate -> due_date
-        word.totalExposure, // Map totalExposure -> repetitions
+        word.weight, 
+        word.stability, 
+        word.dueDate, 
+        word.lastSeen,
+        word.totalExposure,
         id, 
         user.sub
     ).run();
