@@ -1,37 +1,36 @@
-// 单词及其复习状态定义
+
+// 单词及其认知状态定义
 export interface Word {
   id: string;
-  term: string;           // 单词
-  phonetic?: string;      // 音标
-  definition: string;     // 中文释义
-  exampleSentence?: string; // 例句
-  exampleTranslation?: string; // 例句翻译
+  term: string;           
+  phonetic?: string;      
+  definition: string;     
+  exampleSentence?: string; 
+  exampleTranslation?: string; 
   tags: string[];
   
-  // Memory Algorithm Fields (YiShan Strength Model)
-  strength: number;       // 记忆强度 (0-1)
-  interval: number;       // 当前间隔 (分钟)
-  dueDate: number;        // 下次复习时间戳
-  repetitions: number;    // 复习次数
+  // Cognitive Model Fields
+  weight: number;         // 认知权重 (0-1) - 核心信号强度
+  stability: number;      // 信号稳定性 - 对应复习间隔（分钟）
+  lastSeen: number;       // 上次暴露时间戳
+  totalExposure: number;  // 总暴露次数
+  dueDate: number;        // 下次到期时间戳
   
   createdAt: number;
 }
 
-// 用户交互行为指标 (作为算法输入)
 export interface InteractionMetrics {
-  durationMs: number;     // 停留毫秒数
-  flipped: boolean;       // 是否翻转查看背面
-  audioPlayed: number;    // 播放音频次数
-  exampleExpanded: boolean; // 是否展开例句
-  direction: 'left' | 'right'; // 滑动方向
+  durationMs: number;     
+  isFlipped: boolean;       
+  audioPlayedCount: number;
+  direction: 'left' | 'right';
 }
 
-// 统计数据
 export interface Stats {
-  totalWords: number;
-  dueToday: number;
-  learned: number; // Interval > 1 day
-  retentionRate: number; // Based on avg strength
+  totalSignals: number;    
+  fadingSignals: number;   
+  stabilizedSignals: number; 
+  connectivity: number;    
 }
 
 export interface User {

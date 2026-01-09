@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Word, InteractionMetrics } from '../types';
 import Flashcard from './Flashcard';
-import { CheckCircle, Search, Plus, BookDown, Loader2 } from 'lucide-react';
+import { Search, Plus, BookDown, Loader2, PartyPopper, ChevronLeft, ChevronRight } from 'lucide-react';
 import { db } from '../services/storage';
-import { calculateStrength, scheduleNextReview } from '../lib/algorithm';
+import { evaluateInteraction } from '../lib/algorithm';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { playSound } from '../lib/sound';
 
 interface StudySessionProps {
   dueWords: Word[];
@@ -14,91 +17,149 @@ interface StudySessionProps {
   onUpdateWord: (word: Word) => void;
 }
 
+// 动画变体：定义轮盘切换效果
+// Added explicit type Variants to resolve type incompatibility with motion.div which expects literal types for transitions
+const slideVariants: Variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? -400 : 400,
+    opacity: 0,
+    scale: 0.8,
+    rotateY: direction > 0 ? -15 : 15,
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+    scale: 1,
+    rotateY: 0,
+    transition: {
+      x: { type: "spring", stiffness: 300, damping: 30 },
+      opacity: { duration: 0.2 },
+      scale: { duration: 0.3 }
+    }
+  },
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? -400 : 400,
+    opacity: 0,
+    scale: 0.8,
+    rotateY: direction < 0 ? 15 : -15,
+    transition: {
+      x: { type: "spring", stiffness: 300, damping: 30 },
+      opacity: { duration: 0.2 }
+    }
+  })
+};
+
 const StudySession: React.FC<StudySessionProps> = ({ 
   dueWords, onComplete, onAddWord, onImportCore, isImporting, onUpdateWord 
 }) => {
-  const [queue, setQueue] = useState<Word[]>([]);
-  const [completedCount, setCompletedCount] = useState(0);
-  const [totalSessionWords, setTotalSessionWords] = useState(0);
-  
+  const [sessionWords, setSessionWords] = useState<Word[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
+  const [isFinished, setIsFinished] = useState(false);
+  // direction: 1 为右滑（向右移），-1 为左滑（向左移）
+  const [swipeDir, setSwipeDir] = useState<number>(0);
+
   useEffect(() => {
-      setQueue(dueWords);
-      setTotalSessionWords(dueWords.length);
-      setCompletedCount(0);
+      setSessionWords(dueWords);
+      setCurrentIndex(0);
+      setCompletedSet(new Set());
+      setIsFinished(false);
+      setSwipeDir(0);
   }, [dueWords]);
 
-  const handleInteraction = async (metrics: InteractionMetrics) => {
-    const currentWord = queue[0];
+  const handleSwipe = async (direction: 'left' | 'right', metrics: InteractionMetrics) => {
+    const currentWord = sessionWords[currentIndex];
     if (!currentWord) return;
 
-    // 1. Algorithmic update
-    const strength = calculateStrength(currentWord, metrics);
-    const { interval, dueDate, repetitions } = scheduleNextReview(strength, currentWord.interval || 0);
+    // 更新滑动方向状态以触发动画
+    const dirValue = direction === 'right' ? 1 : -1;
+    setSwipeDir(dirValue);
+
+    // 1. 调用隐式评估算法
+    const { weight, stability, dueDate } = evaluateInteraction(currentWord, metrics);
 
     const updatedWord: Word = {
         ...currentWord,
-        strength,
-        interval,
+        weight,
+        stability,
         dueDate,
-        repetitions: (currentWord.repetitions || 0) + repetitions
+        lastSeen: Date.now(),
+        totalExposure: (currentWord.totalExposure || 0) + 1
     };
 
-    // 2. Persist
+    // 2. 持久化
     db.updateWord(updatedWord).then(() => onUpdateWord(updatedWord)).catch(console.error);
 
-    // 3. Queue Management
-    const nextQueue = queue.slice(1);
+    // 3. 标记完成逻辑
+    if (direction === 'right') {
+        setCompletedSet(prev => new Set(prev).add(currentWord.id));
+        
+        if (metrics.durationMs < 1000 && !metrics.isFlipped) {
+            playSound('victory');
+        } else {
+            playSound('success');
+        }
 
-    if (interval <= 10) {
-        // Re-insert if hard/forgotten (interval minutes small)
-        // Insert at pos 3 or end to ensure it doesn't appear immediately if queue is small
-        const insertAt = Math.min(nextQueue.length, 3);
-        nextQueue.splice(insertAt, 0, updatedWord);
+        if (currentIndex < sessionWords.length - 1) {
+            // 延迟微小时间让 Flashcard 的原生动画先运行完成
+            setTimeout(() => setCurrentIndex(prev => prev + 1), 50);
+        } else {
+            if (completedSet.size + 1 >= sessionWords.length) {
+                setTimeout(() => setIsFinished(true), 300);
+            }
+        }
     } else {
-        setCompletedCount(prev => prev + 1);
+        playSound('forgot');
+        if (currentIndex > 0) {
+            setTimeout(() => setCurrentIndex(prev => prev - 1), 50);
+        } else {
+            // 如果是第一个且左滑，仅重置状态
+            setSwipeDir(0);
+        }
     }
-
-    setQueue(nextQueue);
   };
 
-  if (queue.length === 0 && totalSessionWords > 0) {
+  if (isFinished) {
     return (
-        <div className="flex flex-col items-center justify-center h-full text-center animate-in zoom-in-95 p-6">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600 shadow-green-200 shadow-lg">
-                <CheckCircle size={48} />
+        <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-in fade-in zoom-in duration-500">
+            <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-8 text-indigo-500">
+                <PartyPopper size={48} />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">All Done!</h2>
-            <p className="text-gray-500 mb-8 max-w-xs mx-auto">
-                本次复习已完成，智能算法已为您安排了下次复习时间。
+            <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tighter">本组复习完成</h2>
+            <p className="text-slate-400 mb-10 max-w-xs mx-auto text-sm font-medium leading-relaxed">
+                所有到期信号已根据您的交互行为重新校准。
             </p>
             <button 
                 onClick={onComplete}
-                className="w-full max-w-xs px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold shadow-xl hover:bg-black transition-all active:scale-95"
+                className="w-full max-w-xs px-8 py-5 bg-indigo-600 text-white rounded-[2rem] font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95"
             >
-                返回概览
+                结束会话
             </button>
         </div>
     );
   }
 
-  if (queue.length === 0) {
+  if (sessionWords.length === 0) {
     return (
          <div className="flex flex-col items-center justify-center h-full text-center p-6">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
                 <Search size={32} />
             </div>
-            <h2 className="text-xl font-bold text-gray-800">暂无复习任务</h2>
-            <div className="flex flex-col gap-3 mt-8 w-full max-w-xs">
+            <h2 className="text-xl font-bold text-slate-800">当前没有到期的信号</h2>
+            <p className="text-slate-400 text-sm mt-2">您的所有记忆节点目前都处于稳定状态。</p>
+            <div className="flex flex-col gap-3 mt-10 w-full max-w-xs">
                  <button 
                     onClick={onAddWord}
-                    className="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
+                    className="w-full px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-50"
                 >
-                    <Plus size={18} /> 添加新单词
+                    <Plus size={18} /> 载入新信息
                 </button>
                 <button 
                     onClick={onImportCore}
                     disabled={isImporting}
-                    className="w-full px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-gray-50"
+                    className="w-full px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold flex items-center justify-center gap-2"
                 >
                     {isImporting ? <Loader2 size={18} className="animate-spin"/> : <BookDown size={18} />} 导入核心词库
                 </button>
@@ -107,49 +168,58 @@ const StudySession: React.FC<StudySessionProps> = ({
     );
   }
 
-  const progress = totalSessionWords > 0 ? Math.min(100, Math.round((completedCount / totalSessionWords) * 100)) : 0;
+  const progress = sessionWords.length > 0 ? Math.min(100, Math.round((completedSet.size / sessionWords.length) * 100)) : 0;
+  const currentWord = sessionWords[currentIndex];
 
   return (
-    <div className="flex flex-col h-full w-full max-w-md mx-auto relative pt-4 pb-4">
-         {/* Top Bar */}
-         <div className="flex-none px-4 mb-4">
-            <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                <span>Today's Review</span>
-                <span>{completedCount} / {totalSessionWords}</span>
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto relative pt-6 pb-10">
+         <div className="flex-none px-6 mb-8">
+            <div className="flex justify-between items-end mb-4">
+                <div>
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">认知交互流</h2>
+                    <p className="text-xs text-indigo-500 font-bold mt-0.5">轮盘无感评估 (Flux-v4)</p>
+                </div>
+                <span className="text-sm font-black text-slate-800 tracking-tighter">
+                    {currentIndex + 1} <span className="text-slate-300 mx-1">/</span> {sessionWords.length}
+                </span>
             </div>
-            <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div 
-                    className="h-full bg-indigo-500 transition-all duration-300 ease-out"
+                    className="h-full bg-indigo-600 transition-all duration-700 ease-out"
                     style={{ width: `${progress}%` }}
                 />
             </div>
          </div>
 
-         {/* Card Stack Area */}
-         <div className="flex-1 relative w-full perspective-1000 px-2">
-            {/* Background Card (The 'Next' Card) */}
-            {queue.length > 1 && (
-                <div className="absolute inset-0 z-0 pointer-events-none px-2" style={{ top: 0 }}>
+         <div className="flex-1 relative w-full perspective-1000 px-6 overflow-visible">
+            <AnimatePresence initial={false} custom={swipeDir} mode="popLayout">
+                <motion.div
+                    key={currentWord.id}
+                    custom={swipeDir}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    className="w-full h-full absolute inset-0 px-6"
+                >
                     <Flashcard 
-                        key={`bg-${queue[1].id}`} 
-                        word={queue[1]} 
-                        onResult={() => {}} 
-                        isFront={false} 
+                        word={currentWord} 
+                        onSwipe={handleSwipe}
                     />
-                </div>
-            )}
-
-            {/* Foreground Card (Active) */}
-            <div className="absolute inset-0 z-10 px-2" style={{ top: 0 }}>
-                <Flashcard 
-                    key={queue[0].id} 
-                    word={queue[0]} 
-                    onResult={handleInteraction}
-                />
-            </div>
+                </motion.div>
+            </AnimatePresence>
          </div>
          
-         <div className="h-8 flex-none" /> {/* Bottom spacer */}
+         <div className="flex-none px-6 mt-8 flex justify-center text-slate-300 gap-8">
+             <div className="flex flex-col items-center gap-1 opacity-40">
+                <ChevronLeft size={16} />
+                <span className="text-[8px] font-black uppercase tracking-widest">左滑: 不熟</span>
+             </div>
+             <div className="flex flex-col items-center gap-1 opacity-40">
+                <ChevronRight size={16} />
+                <span className="text-[8px] font-black uppercase tracking-widest">右滑: 掌握</span>
+             </div>
+         </div>
     </div>
   );
 };

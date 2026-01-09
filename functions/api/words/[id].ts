@@ -1,3 +1,4 @@
+
 import { Env, verifyToken, jsonResponse, PagesFunction, ensureTables } from '../../utils';
 
 async function getUser(request: Request, secret: string) {
@@ -18,6 +19,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     const id = params.id as string;
     const word = await request.json() as any;
 
+    // Map frontend properties to DB columns
     const res = await env.DB.prepare(
         `UPDATE words SET 
             term = ?, definition = ?, phonetic = ?, example_sentence = ?, 
@@ -25,9 +27,18 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
             due_date = ?, repetitions = ? 
          WHERE id = ? AND user_id = ?`
     ).bind(
-        word.term, word.definition, word.phonetic, word.exampleSentence,
-        word.exampleTranslation, JSON.stringify(word.tags), word.strength,
-        word.interval, word.dueDate, word.repetitions, id, user.sub
+        word.term, 
+        word.definition, 
+        word.phonetic, 
+        word.exampleSentence,
+        word.exampleTranslation, 
+        JSON.stringify(word.tags), 
+        word.weight, // Map weight -> strength
+        word.stability, // Map stability -> interval
+        word.dueDate, // Map dueDate -> due_date
+        word.totalExposure, // Map totalExposure -> repetitions
+        id, 
+        user.sub
     ).run();
 
     if (res.meta.changes === 0) return jsonResponse({ error: 'Not found' }, 404);

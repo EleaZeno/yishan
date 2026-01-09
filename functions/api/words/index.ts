@@ -23,9 +23,16 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         if (mode === 'study') {
             const now = Date.now();
             const { results } = await env.DB.prepare(
-                'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0 AND due_date <= ? ORDER BY due_date ASC LIMIT 50'
+                'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0 AND due_date <= ? ORDER BY due_date ASC LIMIT 100'
             ).bind(user.sub, now).all();
-            return jsonResponse(results.map((r: any) => ({...r, tags: r.tags ? JSON.parse(r.tags) : []})));
+            return jsonResponse(results.map((r: any) => ({
+                ...r, 
+                weight: r.strength, 
+                stability: r.interval, 
+                totalExposure: r.repetitions, 
+                dueDate: r.due_date,
+                tags: r.tags ? JSON.parse(r.tags) : []
+            })));
         } else {
             const page = parseInt(url.searchParams.get('page') || '1');
             const limit = parseInt(url.searchParams.get('limit') || '20');
@@ -36,15 +43,22 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
             const params: any[] = [user.sub];
 
             if (search) {
-                query += ' AND term LIKE ?';
-                params.push(`%${search}%`);
+                query += ' AND (term LIKE ? OR definition LIKE ?)';
+                params.push(`%${search}%`, `%${search}%`);
             }
 
             query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
             params.push(limit, offset);
 
             const { results } = await env.DB.prepare(query).bind(...params).all();
-            return jsonResponse(results.map((r: any) => ({...r, tags: r.tags ? JSON.parse(r.tags) : []})));
+            return jsonResponse(results.map((r: any) => ({
+                ...r, 
+                weight: r.strength, 
+                stability: r.interval, 
+                totalExposure: r.repetitions, 
+                dueDate: r.due_date,
+                tags: r.tags ? JSON.parse(r.tags) : []
+            })));
         }
     } catch (e: any) {
         return jsonResponse({ error: e.message }, 500);
@@ -61,6 +75,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         const word = await request.json() as any;
         if (!word.id || !word.term) return jsonResponse({ error: 'Invalid data' }, 400);
 
+        // 检查是否已存在
+        const existing = await env.DB.prepare('SELECT id FROM words WHERE user_id = ? AND term = ? AND is_deleted = 0').bind(user.sub, word.term).first();
+        if (existing) return jsonResponse({ error: 'Word already in your library' }, 409);
+
+        // Map frontend properties to DB columns
         await env.DB.prepare(
             `INSERT INTO words (
                 id, user_id, term, definition, phonetic, example_sentence, 
@@ -70,9 +89,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         ).bind(
             word.id, user.sub, word.term, word.definition, word.phonetic || null,
             word.exampleSentence || null, word.exampleTranslation || null,
-            JSON.stringify(word.tags || []), word.strength || 0,
-            word.interval || 0, word.dueDate || Date.now(),
-            word.repetitions || 0, word.createdAt || Date.now()
+            JSON.stringify(word.tags || []), 
+            word.weight || 0, // Map weight -> strength
+            word.stability || 0, // Map stability -> interval
+            word.dueDate || Date.now(), // Map dueDate -> due_date
+            word.totalExposure || 0, // Map totalExposure -> repetitions
+            word.createdAt || Date.now()
         ).run();
 
         return jsonResponse({ success: true });

@@ -1,3 +1,4 @@
+
 import { Env, verifyToken, jsonResponse, PagesFunction, ensureTables } from '../../utils';
 
 async function getUser(request: Request, secret: string) {
@@ -40,10 +41,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
                 word.exampleSentence || null, 
                 word.exampleTranslation || null,
                 JSON.stringify(word.tags || []), 
-                word.strength || 0,
-                word.interval || 0, 
-                word.dueDate || Date.now(),
-                word.repetitions || 0, 
+                word.weight || 0, // Map weight -> strength
+                word.stability || 0, // Map stability -> interval
+                word.dueDate || Date.now(), // Map dueDate -> due_date
+                word.totalExposure || 0, // Map totalExposure -> repetitions
                 word.createdAt || Date.now()
             )
         );

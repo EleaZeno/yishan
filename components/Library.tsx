@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Word } from '../types';
 import { Search, BookDown, Loader2, Trash2 } from 'lucide-react';
@@ -107,10 +108,12 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
                             <div className="flex flex-col items-end gap-2">
                                 <span className={clsx(
                                     "text-xs font-bold px-2 py-1 rounded-full",
-                                    word.interval > 20 ? 'bg-green-100 text-green-700' : 
-                                    word.interval > 5 ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+                                    // Use stability instead of interval (minutes)
+                                    word.stability > 28800 ? 'bg-green-100 text-green-700' : 
+                                    word.stability > 7200 ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
                                 )}>
-                                    Lv.{word.repetitions}
+                                    {/* Use totalExposure instead of repetitions */}
+                                    Lv.{word.totalExposure}
                                 </span>
                                 <button 
                                     onClick={(e) => {

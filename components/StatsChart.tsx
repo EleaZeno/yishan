@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Word } from '../types';
@@ -10,14 +11,16 @@ const StatsChart: React.FC<StatsChartProps> = ({ words }) => {
   // Compute distribution of intervals (Learning, Reviewing, Mastered)
   const data = React.useMemo(() => {
     let newWords = 0;
-    let learning = 0; // interval <= 3
-    let reviewing = 0; // interval > 3 && <= 14
-    let mastered = 0; // interval > 14
+    let learning = 0; // stability <= 4320 (3 days)
+    let reviewing = 0; // stability > 4320 && <= 20160 (14 days)
+    let mastered = 0; // stability > 20160
 
     words.forEach(w => {
-      if (w.repetitions === 0) newWords++;
-      else if (w.interval <= 3) learning++;
-      else if (w.interval <= 14) reviewing++;
+      // Use totalExposure instead of repetitions
+      if (w.totalExposure === 0) newWords++;
+      // Use stability instead of interval (values are in minutes)
+      else if (w.stability <= 4320) learning++;
+      else if (w.stability <= 20160) reviewing++;
       else mastered++;
     });
 

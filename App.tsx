@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import AddWordModal from './components/AddWordModal';
@@ -14,15 +15,18 @@ import { getCoreVocabulary } from './data/vocabulary';
 import { initAudio } from './lib/sound';
 
 const App: React.FC = () => {
-  // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
 
-  // App State
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dueWords, setDueWords] = useState<Word[]>([]);
-  const [stats, setStats] = useState<Stats>({ totalWords: 0, dueToday: 0, learned: 0, retentionRate: 0 });
+  const [stats, setStats] = useState<Stats>({ 
+      totalSignals: 0, 
+      fadingSignals: 0, 
+      stabilizedSignals: 0, 
+      connectivity: 0 
+  });
   const [chartData, setChartData] = useState<Word[]>([]); 
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -30,7 +34,6 @@ const App: React.FC = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Network Listeners
   useEffect(() => {
       const handleOnline = () => setIsOnline(true);
       const handleOffline = () => setIsOnline(false);
@@ -42,27 +45,15 @@ const App: React.FC = () => {
       }
   }, []);
 
-  // Audio Unlocker for Mobile
   useEffect(() => {
     const unlockAudio = () => {
         initAudio();
         window.removeEventListener('touchstart', unlockAudio);
-        window.removeEventListener('click', unlockAudio);
-        window.removeEventListener('keydown', unlockAudio);
     };
-
     window.addEventListener('touchstart', unlockAudio, { passive: true });
-    window.addEventListener('click', unlockAudio);
-    window.addEventListener('keydown', unlockAudio);
-
-    return () => {
-        window.removeEventListener('touchstart', unlockAudio);
-        window.removeEventListener('click', unlockAudio);
-        window.removeEventListener('keydown', unlockAudio);
-    };
+    return () => window.removeEventListener('touchstart', unlockAudio);
   }, []);
 
-  // Check Auth on Mount
   useEffect(() => {
     const token = authService.getToken();
     const currentUser = authService.getCurrentUser();
@@ -83,10 +74,12 @@ const App: React.FC = () => {
       setChartData(statsWords);
       
       setStats({
-        totalWords: statsWords.length,
-        dueToday: due.length,
-        learned: statsWords.filter(w => w.interval > 1).length,
-        retentionRate: statsWords.length > 0 ? Math.round((statsWords.reduce((acc, w) => acc + (w.strength || 0), 0) / statsWords.length) * 100) : 0
+        totalSignals: statsWords.length,
+        fadingSignals: due.length,
+        stabilizedSignals: statsWords.filter(w => (w.weight || 0) > 0.7).length,
+        connectivity: statsWords.length > 0 
+            ? Math.round((statsWords.reduce((acc, w) => acc + (w.weight || 0), 0) / statsWords.length) * 100) 
+            : 0
       });
 
     } catch (e) {
@@ -133,23 +126,26 @@ const App: React.FC = () => {
   };
 
   const handleDeleteWord = async (id: string) => {
-    if(confirm('确定要删除这个单词吗？')) {
+    if(confirm('移除此信号连接？')) {
         await db.deleteWord(id);
+        loadDashboardData();
     }
   }
+
+  const handleUpdateWord = (updatedWord: Word) => {
+    setChartData(prev => prev.map(w => w.id === updatedWord.id ? updatedWord : w));
+  };
   
   const handleImportCore = async () => {
-      if (!confirm('确定要导入50个核心词汇到你的词库吗？')) return;
+      if (!confirm('导入预设信号包？')) return;
       setIsImporting(true);
       try {
           const vocab = getCoreVocabulary().map(v => ({
             ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
             ...getInitialWordState(), createdAt: Date.now()
           } as Word));
-          
           await db.importWords(vocab);
           await loadDashboardData();
-          alert('导入成功');
       } catch (e) {
           console.error(e);
       } finally {
@@ -158,7 +154,7 @@ const App: React.FC = () => {
   };
 
   if (authChecking) {
-      return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin text-indigo-600" size={32}/></div>
+      return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-slate-300" size={32}/></div>
   }
 
   if (!isAuthenticated) {
@@ -185,11 +181,14 @@ const App: React.FC = () => {
       {activeTab === 'study' && (
           <StudySession 
             dueWords={dueWords}
-            onComplete={() => setActiveTab('dashboard')}
+            onComplete={() => {
+                setActiveTab('dashboard');
+                loadDashboardData();
+            }}
             onAddWord={() => setIsAddModalOpen(true)}
             onImportCore={handleImportCore}
             isImporting={isImporting}
-            onUpdateWord={() => {}}
+            onUpdateWord={handleUpdateWord}
           />
       )}
 

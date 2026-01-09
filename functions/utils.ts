@@ -1,3 +1,5 @@
+
+
 export interface D1Result<T = unknown> {
   results: T[];
   success: boolean;
@@ -5,8 +7,24 @@ export interface D1Result<T = unknown> {
   error?: string;
 }
 
+// Added Cloudflare D1 type definitions to resolve the compiler errors
+export interface D1PreparedStatement {
+  bind(...values: any[]): D1PreparedStatement;
+  first<T = unknown>(column?: string): Promise<T | null>;
+  run<T = unknown>(): Promise<D1Result<T>>;
+  all<T = unknown>(): Promise<D1Result<T>>;
+  raw<T = unknown>(): Promise<T[]>;
+}
+
+export interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+  dump(): Promise<ArrayBuffer>;
+  batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+  exec<T = unknown>(query: string): Promise<D1Result<T>>;
+}
+
 export interface Env {
-  DB: any;
+  DB: D1Database;
   JWT_SECRET: string;
 }
 
@@ -24,17 +42,17 @@ export type PagesFunction<
   data: Data;
 }) => Response | Promise<Response>;
 
-/**
- * 替代方案：在代码中运行建表语句
- * 如果没有 schema.sql，应用会在启动时自动创建表
- */
 let isDbInitialized = false;
 
-export async function ensureTables(db: any) {
+/**
+ * 替代 schema.sql 的方案：代码内自动初始化
+ * 每次 API 调用都会尝试运行（由于有 IF NOT EXISTS，性能损耗极小）
+ */
+export async function ensureTables(db: D1Database) {
     if (isDbInitialized) return;
     
     try {
-        // 创建用户表
+        // 1. 创建用户表
         await db.prepare(`
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
@@ -45,7 +63,7 @@ export async function ensureTables(db: any) {
             )
         `).run();
 
-        // 创建单词表
+        // 2. 创建单词表 (增加 idx 以优化复习查询)
         await db.prepare(`
             CREATE TABLE IF NOT EXISTS words (
                 id TEXT PRIMARY KEY,
@@ -65,13 +83,12 @@ export async function ensureTables(db: any) {
             )
         `).run();
 
-        // 创建索引提升查询性能
+        // 3. 确保索引存在
         await db.prepare(`CREATE INDEX IF NOT EXISTS idx_words_user_due ON words(user_id, due_date, is_deleted)`).run();
-        await db.prepare(`CREATE INDEX IF NOT EXISTS idx_words_user_term ON words(user_id, term)`).run();
         
         isDbInitialized = true;
     } catch (e) {
-        console.error("D1 自动初始化失败。请检查 Cloudflare Dashboard 中的 D1 绑定是否正确。", e);
+        console.error("D1 Auto-Init Error:", e);
     }
 }
 
