@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Word, InteractionMetrics } from '../types';
 import Flashcard from './Flashcard';
 import { Search, Plus, BookDown, Loader2, PartyPopper, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -17,8 +17,6 @@ interface StudySessionProps {
   onUpdateWord: (word: Word) => void;
 }
 
-// 动画变体：定义轮盘切换效果
-// Added explicit type Variants to resolve type incompatibility with motion.div which expects literal types for transitions
 const slideVariants: Variants = {
   enter: (direction: number) => ({
     x: direction > 0 ? -400 : 400,
@@ -58,7 +56,6 @@ const StudySession: React.FC<StudySessionProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedSet, setCompletedSet] = useState<Set<string>>(new Set());
   const [isFinished, setIsFinished] = useState(false);
-  // direction: 1 为右滑（向右移），-1 为左滑（向左移）
   const [swipeDir, setSwipeDir] = useState<number>(0);
 
   useEffect(() => {
@@ -69,15 +66,13 @@ const StudySession: React.FC<StudySessionProps> = ({
       setSwipeDir(0);
   }, [dueWords]);
 
-  const handleSwipe = async (direction: 'left' | 'right', metrics: InteractionMetrics) => {
+  const handleSwipe = useCallback(async (direction: 'left' | 'right', metrics: InteractionMetrics) => {
     const currentWord = sessionWords[currentIndex];
-    if (!currentWord) return;
+    if (!currentWord || isFinished) return;
 
-    // 更新滑动方向状态以触发动画
     const dirValue = direction === 'right' ? 1 : -1;
     setSwipeDir(dirValue);
 
-    // 1. 调用隐式评估算法
     const { weight, stability, dueDate } = evaluateInteraction(currentWord, metrics);
 
     const updatedWord: Word = {
@@ -89,10 +84,8 @@ const StudySession: React.FC<StudySessionProps> = ({
         totalExposure: (currentWord.totalExposure || 0) + 1
     };
 
-    // 2. 持久化
     db.updateWord(updatedWord).then(() => onUpdateWord(updatedWord)).catch(console.error);
 
-    // 3. 标记完成逻辑
     if (direction === 'right') {
         setCompletedSet(prev => new Set(prev).add(currentWord.id));
         
@@ -103,23 +96,45 @@ const StudySession: React.FC<StudySessionProps> = ({
         }
 
         if (currentIndex < sessionWords.length - 1) {
-            // 延迟微小时间让 Flashcard 的原生动画先运行完成
             setTimeout(() => setCurrentIndex(prev => prev + 1), 50);
         } else {
-            if (completedSet.size + 1 >= sessionWords.length) {
-                setTimeout(() => setIsFinished(true), 300);
-            }
+            setTimeout(() => setIsFinished(true), 300);
         }
     } else {
         playSound('forgot');
         if (currentIndex > 0) {
             setTimeout(() => setCurrentIndex(prev => prev - 1), 50);
         } else {
-            // 如果是第一个且左滑，仅重置状态
             setSwipeDir(0);
         }
     }
-  };
+  }, [currentIndex, sessionWords, isFinished, onUpdateWord]);
+
+  // 桌面端键盘交互支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isFinished || sessionWords.length === 0) return;
+      
+      if (e.key === 'ArrowLeft') {
+        handleSwipe('left', {
+          durationMs: 500,
+          isFlipped: false,
+          audioPlayedCount: 0,
+          direction: 'left'
+        });
+      } else if (e.key === 'ArrowRight') {
+        handleSwipe('right', {
+          durationMs: 500,
+          isFlipped: false,
+          audioPlayedCount: 0,
+          direction: 'right'
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSwipe, isFinished, sessionWords.length]);
 
   if (isFinished) {
     return (
@@ -133,9 +148,9 @@ const StudySession: React.FC<StudySessionProps> = ({
             </p>
             <button 
                 onClick={onComplete}
-                className="w-full max-w-xs px-8 py-5 bg-indigo-600 text-white rounded-[2rem] font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95"
+                className="w-full max-w-xs px-8 py-5 bg-indigo-600 text-white rounded-3xl font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95"
             >
-                结束会话
+                回到概览
             </button>
         </div>
     );
@@ -152,14 +167,14 @@ const StudySession: React.FC<StudySessionProps> = ({
             <div className="flex flex-col gap-3 mt-10 w-full max-w-xs">
                  <button 
                     onClick={onAddWord}
-                    className="w-full px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-50"
+                    className="w-full px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-50 active:scale-95 transition-all"
                 >
                     <Plus size={18} /> 载入新信息
                 </button>
                 <button 
                     onClick={onImportCore}
                     disabled={isImporting}
-                    className="w-full px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold flex items-center justify-center gap-2"
+                    className="w-full px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all"
                 >
                     {isImporting ? <Loader2 size={18} className="animate-spin"/> : <BookDown size={18} />} 导入核心词库
                 </button>
@@ -172,8 +187,8 @@ const StudySession: React.FC<StudySessionProps> = ({
   const currentWord = sessionWords[currentIndex];
 
   return (
-    <div className="flex flex-col h-full w-full max-w-lg mx-auto relative pt-6 pb-10">
-         <div className="flex-none px-6 mb-8">
+    <div className="flex flex-col h-full w-full max-w-2xl mx-auto relative pt-4 md:pt-10 pb-6 md:pb-12 px-4 md:px-0">
+         <div className="flex-none mb-6 md:mb-10">
             <div className="flex justify-between items-end mb-4">
                 <div>
                     <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">认知交互流</h2>
@@ -191,7 +206,8 @@ const StudySession: React.FC<StudySessionProps> = ({
             </div>
          </div>
 
-         <div className="flex-1 relative w-full perspective-1000 px-6 overflow-visible">
+         {/* 容器高度自适应优化 */}
+         <div className="flex-1 relative w-full perspective-1000 overflow-visible min-h-[400px] md:min-h-[550px] max-h-[700px]">
             <AnimatePresence initial={false} custom={swipeDir} mode="popLayout">
                 <motion.div
                     key={currentWord.id}
@@ -200,7 +216,7 @@ const StudySession: React.FC<StudySessionProps> = ({
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    className="w-full h-full absolute inset-0 px-6"
+                    className="w-full h-full absolute inset-0"
                 >
                     <Flashcard 
                         word={currentWord} 
@@ -210,14 +226,14 @@ const StudySession: React.FC<StudySessionProps> = ({
             </AnimatePresence>
          </div>
          
-         <div className="flex-none px-6 mt-8 flex justify-center text-slate-300 gap-8">
-             <div className="flex flex-col items-center gap-1 opacity-40">
-                <ChevronLeft size={16} />
-                <span className="text-[8px] font-black uppercase tracking-widest">左滑: 不熟</span>
+         <div className="flex-none mt-8 md:mt-12 flex justify-center text-slate-300 gap-8 md:gap-16">
+             <div className="flex flex-col items-center gap-2 opacity-50">
+                <ChevronLeft size={20} className="animate-pulse" />
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">左滑 / 键盘左: 不熟</span>
              </div>
-             <div className="flex flex-col items-center gap-1 opacity-40">
-                <ChevronRight size={16} />
-                <span className="text-[8px] font-black uppercase tracking-widest">右滑: 掌握</span>
+             <div className="flex flex-col items-center gap-2 opacity-50">
+                <ChevronRight size={20} className="animate-pulse" />
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest">右滑 / 键盘右: 掌握</span>
              </div>
          </div>
     </div>
