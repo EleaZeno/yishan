@@ -1,5 +1,4 @@
-
-import { Env, verifyToken, jsonResponse, PagesFunction } from '../../utils';
+import { Env, verifyToken, jsonResponse, PagesFunction, ensureTables } from '../../utils';
 
 async function getUser(request: Request, secret: string) {
     const authHeader = request.headers.get('Authorization');
@@ -12,6 +11,7 @@ async function getUser(request: Request, secret: string) {
 
 export const onRequestPut: PagesFunction<Env> = async (context) => {
     const { request, env, params } = context;
+    await ensureTables(env.DB);
     const user = await getUser(request, env.JWT_SECRET || 'dev-secret');
     if (!user) return jsonResponse({ error: 'Unauthorized' }, 401);
 
@@ -36,6 +36,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
 export const onRequestDelete: PagesFunction<Env> = async (context) => {
     const { request, env, params } = context;
+    await ensureTables(env.DB);
     const user = await getUser(request, env.JWT_SECRET || 'dev-secret');
     if (!user) return jsonResponse({ error: 'Unauthorized' }, 401);
 

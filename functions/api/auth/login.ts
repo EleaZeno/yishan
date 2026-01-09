@@ -1,19 +1,17 @@
-
-import { Env, hashPassword, signToken, jsonResponse, PagesFunction } from '../../utils';
+import { Env, hashPassword, signToken, jsonResponse, PagesFunction, ensureTables } from '../../utils';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   try {
+    await ensureTables(env.DB);
     const { email, password } = await request.json() as any;
 
-    // Fixed: env.DB is 'any', so first() cannot accept a type argument. Assert the result instead.
     const userRecord = (await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first()) as any;
     
     if (!userRecord) {
       return jsonResponse({ error: 'Invalid credentials' }, 401);
     }
 
-    // Verify password
     const { hash: inputHash } = await hashPassword(password, userRecord.salt);
     
     if (inputHash !== userRecord.password_hash) {

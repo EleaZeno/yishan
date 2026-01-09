@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { Word } from '../types';
-import { getInitialWordState } from '../lib/sm2';
+import { getInitialWordState } from '../lib/algorithm';
 
 interface AddWordModalProps {
   isOpen: boolean;

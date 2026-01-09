@@ -1,7 +1,6 @@
 export const APP_NAME = "忆闪 YiShan";
 
-// SM-2 默认值
-export const DEFAULT_EASINESS = 2.5;
+// 默认值
 export const DEFAULT_INTERVAL = 0;
 export const DEFAULT_REPETITIONS = 0;
 

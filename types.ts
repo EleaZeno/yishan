@@ -14,9 +14,6 @@ export interface Word {
   dueDate: number;        // 下次复习时间戳
   repetitions: number;    // 复习次数
   
-  // Legacy SM-2 fields (Optional/Deprecated)
-  easiness?: number;      
-  
   createdAt: number;
 }
 
@@ -46,9 +43,4 @@ export interface User {
 export interface AuthResponse {
   token: string;
   user: User;
-}
-
-export interface IWindow extends Window {
-  webkitSpeechRecognition: any;
-  SpeechRecognition: any;
 }

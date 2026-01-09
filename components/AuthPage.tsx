@@ -39,19 +39,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess }) =>
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col md:flex-row">
-        
-        {/* Visual Side (Hidden on mobile) */}
-        {/* <div className="hidden md:flex md:w-1/2 bg-indigo-600 p-8 flex-col justify-between text-white">
-          <div>
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center font-bold text-xl mb-4">Yi</div>
-            <h2 className="text-3xl font-bold mb-2">Master New Words.</h2>
-            <p className="text-indigo-200">AI-powered spaced repetition learning.</p>
-          </div>
-          <div className="text-xs text-indigo-300">© 2024 YiShan App</div>
-        </div> */}
-
-        {/* Form Side */}
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
         <div className="w-full p-8 md:p-10">
           <div className="flex flex-col items-center mb-8">
              <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl mb-4 shadow-lg shadow-indigo-200">
@@ -60,8 +48,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess }) =>
             <h1 className="text-2xl font-bold text-gray-800">
                 {isLogin ? '欢迎回来' : '创建账号'}
             </h1>
-            <p className="text-gray-500 text-sm mt-1">
-                {isLogin ? '登录以同步你的学习进度' : '开启你的 AI 记忆之旅'}
+            <p className="text-gray-500 text-sm mt-1 text-center">
+                {isLogin ? '登录以同步你的学习进度' : '开启基于科学记忆算法的单词之旅'}
             </p>
           </div>
 
@@ -91,7 +79,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess }) =>
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                  placeholder="••••••••"
+                  placeholder="请输入至少6位密码"
                 />
               </div>
             </div>
@@ -108,7 +96,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess }) =>
               disabled={loading}
               className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-md hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? '登录' : '注册')}
+              {loading ? <Loader2 className="animate-spin" size={20} /> : (isLogin ? '立即登录' : '注册账号')}
             </button>
           </form>
 
@@ -117,7 +105,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess }) =>
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-sm text-gray-600 hover:text-indigo-600 font-medium transition-colors"
              >
-                {isLogin ? '还没有账号？ 去注册' : '已有账号？ 去登录'}
+                {isLogin ? '还没有账号？ 立即注册' : '已有账号？ 去登录'}
              </button>
 
              <div className="w-full flex items-center gap-3">
@@ -130,11 +118,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, onGuestAccess }) =>
                 onClick={onGuestAccess}
                 className="w-full py-2.5 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group"
              >
-                <span>游客模式试用</span>
+                <span>以游客身份试用</span>
                 <ArrowRight size={16} className="text-gray-400 group-hover:translate-x-1 transition-transform" />
              </button>
              <p className="text-xs text-center text-gray-400">
-                游客数据仅保存在本地浏览器中
+                注意：游客数据仅保存在本地浏览器中，无法跨端同步
              </p>
           </div>
         </div>

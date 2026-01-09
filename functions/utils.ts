@@ -1,4 +1,3 @@
-
 export interface D1Result<T = unknown> {
   results: T[];
   success: boolean;
@@ -11,7 +10,6 @@ export interface Env {
   JWT_SECRET: string;
 }
 
-// Define PagesFunction since it's being imported from here by the API handlers
 export type PagesFunction<
   Env = any,
   Params extends string = any,
@@ -26,35 +24,55 @@ export type PagesFunction<
   data: Data;
 }) => Response | Promise<Response>;
 
-// 自动初始化数据库表结构
+/**
+ * 替代方案：在代码中运行建表语句
+ * 如果没有 schema.sql，应用会在启动时自动创建表
+ */
+let isDbInitialized = false;
+
 export async function ensureTables(db: any) {
-    await db.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            email TEXT UNIQUE,
-            password_hash TEXT,
-            salt TEXT,
-            created_at INTEGER
-        );
-        CREATE TABLE IF NOT EXISTS words (
-            id TEXT PRIMARY KEY,
-            user_id TEXT,
-            term TEXT,
-            definition TEXT,
-            phonetic TEXT,
-            example_sentence TEXT,
-            example_translation TEXT,
-            tags TEXT,
-            strength REAL DEFAULT 0,
-            interval INTEGER DEFAULT 0,
-            due_date INTEGER,
-            repetitions INTEGER DEFAULT 0,
-            created_at INTEGER,
-            is_deleted INTEGER DEFAULT 0
-        );
-        CREATE INDEX IF NOT EXISTS idx_words_user_due ON words(user_id, due_date, is_deleted);
-        CREATE INDEX IF NOT EXISTS idx_words_user_term ON words(user_id, term);
-    `);
+    if (isDbInitialized) return;
+    
+    try {
+        // 创建用户表
+        await db.prepare(`
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE,
+                password_hash TEXT,
+                salt TEXT,
+                created_at INTEGER
+            )
+        `).run();
+
+        // 创建单词表
+        await db.prepare(`
+            CREATE TABLE IF NOT EXISTS words (
+                id TEXT PRIMARY KEY,
+                user_id TEXT,
+                term TEXT,
+                definition TEXT,
+                phonetic TEXT,
+                example_sentence TEXT,
+                example_translation TEXT,
+                tags TEXT,
+                strength REAL DEFAULT 0,
+                interval INTEGER DEFAULT 0,
+                due_date INTEGER,
+                repetitions INTEGER DEFAULT 0,
+                created_at INTEGER,
+                is_deleted INTEGER DEFAULT 0
+            )
+        `).run();
+
+        // 创建索引提升查询性能
+        await db.prepare(`CREATE INDEX IF NOT EXISTS idx_words_user_due ON words(user_id, due_date, is_deleted)`).run();
+        await db.prepare(`CREATE INDEX IF NOT EXISTS idx_words_user_term ON words(user_id, term)`).run();
+        
+        isDbInitialized = true;
+    } catch (e) {
+        console.error("D1 自动初始化失败。请检查 Cloudflare Dashboard 中的 D1 绑定是否正确。", e);
+    }
 }
 
 export async function signToken(payload: any, secret: string): Promise<string> {

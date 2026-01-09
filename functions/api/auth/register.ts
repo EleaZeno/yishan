@@ -1,8 +1,9 @@
-import { Env, hashPassword, signToken, jsonResponse, PagesFunction } from '../../utils';
+import { Env, hashPassword, signToken, jsonResponse, PagesFunction, ensureTables } from '../../utils';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
   try {
+    await ensureTables(env.DB);
     const { email, password } = await request.json() as any;
 
     if (!email || !password || password.length < 6) {

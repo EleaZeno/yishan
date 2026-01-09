@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import AddWordModal from './components/AddWordModal';
@@ -9,7 +8,7 @@ import Library from './components/Library';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
-import { getInitialWordState } from './lib/sm2';
+import { getInitialWordState } from './lib/algorithm';
 import { Loader2 } from 'lucide-react';
 import { getCoreVocabulary } from './data/vocabulary';
 import { initAudio } from './lib/sound';
@@ -24,7 +23,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dueWords, setDueWords] = useState<Word[]>([]);
   const [stats, setStats] = useState<Stats>({ totalWords: 0, dueToday: 0, learned: 0, retentionRate: 0 });
-  const [chartData, setChartData] = useState<Word[]>([]); // Small subset for charts
+  const [chartData, setChartData] = useState<Word[]>([]); 
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -46,8 +45,7 @@ const App: React.FC = () => {
   // Audio Unlocker for Mobile
   useEffect(() => {
     const unlockAudio = () => {
-        initAudio(); // Initialize and Resume AudioContext on first touch
-        // Remove listener after first interaction
+        initAudio();
         window.removeEventListener('touchstart', unlockAudio);
         window.removeEventListener('click', unlockAudio);
         window.removeEventListener('keydown', unlockAudio);
@@ -75,7 +73,6 @@ const App: React.FC = () => {
     setAuthChecking(false);
   }, []);
 
-  // Load Dashboard Data (Only specific needed data)
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
@@ -86,10 +83,9 @@ const App: React.FC = () => {
       setChartData(statsWords);
       
       setStats({
-        totalWords: statsWords.length, // Approximation in cloud mode
+        totalWords: statsWords.length,
         dueToday: due.length,
         learned: statsWords.filter(w => w.interval > 1).length,
-        // Use average strength for retention rate. Strength is 0-1.
         retentionRate: statsWords.length > 0 ? Math.round((statsWords.reduce((acc, w) => acc + (w.strength || 0), 0) / statsWords.length) * 100) : 0
       });
 
@@ -113,7 +109,6 @@ const App: React.FC = () => {
   const handleGuestAccess = async () => {
       setUser(null);
       setIsAuthenticated(true);
-      // Seed if empty
       const due = await db.getDueWords();
       if (due.length === 0) {
           const vocab = getCoreVocabulary().map(v => ({
@@ -140,7 +135,6 @@ const App: React.FC = () => {
   const handleDeleteWord = async (id: string) => {
     if(confirm('确定要删除这个单词吗？')) {
         await db.deleteWord(id);
-        // We don't reload dashboard to avoid flickering library view, library handles its own state
     }
   }
   
@@ -195,9 +189,7 @@ const App: React.FC = () => {
             onAddWord={() => setIsAddModalOpen(true)}
             onImportCore={handleImportCore}
             isImporting={isImporting}
-            onUpdateWord={(updated) => {
-                // Optional: Update local dueWords cache to reflect immediate change if needed
-            }}
+            onUpdateWord={() => {}}
           />
       )}
 
