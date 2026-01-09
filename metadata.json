@@ -1,7 +1,5 @@
 {
-  "name": "忆闪 (YiShan) - AI Memory Master",
-  "description": "基于SM-2记忆算法与Gemini AI的多平台单词记忆应用。支持AI自动生成释义、例句与发音，利用遗忘曲线科学背词。",
-  "requestFramePermissions": [
-    "microphone"
-  ]
+  "name": "忆闪 (YiShan) - 记忆专家",
+  "description": "基于经典 SM-2 算法的纯净单词记忆应用。多平台适配，利用遗忘曲线科学背词。",
+  "requestFramePermissions": []
 }
