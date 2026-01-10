@@ -20,52 +20,39 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const mode = url.searchParams.get('mode') || 'library';
     
     try {
+        const now = Date.now();
+        let query = 'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0';
+        let params: any[] = [user.sub];
+
         if (mode === 'study') {
-            const now = Date.now();
-            const { results } = await env.DB.prepare(
-                'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0 AND due_date <= ? ORDER BY due_date ASC LIMIT 50'
-            ).bind(user.sub, now).all();
-            
-            return jsonResponse(results.map((r: any) => ({
-                id: r.id,
-                term: r.term,
-                definition: r.definition,
-                phonetic: r.phonetic,
-                exampleSentence: r.example_sentence,
-                exampleTranslation: r.example_translation,
-                tags: r.tags ? JSON.parse(r.tags) : [],
-                weight: r.weight,
-                stability: r.stability,
-                dueDate: r.due_date,
-                lastSeen: r.last_seen,
-                totalExposure: r.total_exposure,
-                createdAt: r.created_at
-            })));
+            query += ' AND due_date <= ? ORDER BY due_date ASC LIMIT 50';
+            params.push(now);
         } else {
             const page = parseInt(url.searchParams.get('page') || '1');
             const limit = parseInt(url.searchParams.get('limit') || '20');
             const offset = (page - 1) * limit;
-
-            const { results } = await env.DB.prepare(
-                'SELECT * FROM words WHERE user_id = ? AND is_deleted = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?'
-            ).bind(user.sub, limit, offset).all();
-
-            return jsonResponse(results.map((r: any) => ({
-                id: r.id,
-                term: r.term,
-                definition: r.definition,
-                phonetic: r.phonetic,
-                exampleSentence: r.example_sentence,
-                exampleTranslation: r.example_translation,
-                tags: r.tags ? JSON.parse(r.tags) : [],
-                weight: r.weight,
-                stability: r.stability,
-                dueDate: r.due_date,
-                lastSeen: r.last_seen,
-                totalExposure: r.total_exposure,
-                createdAt: r.created_at
-            })));
+            query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+            params.push(limit, offset);
         }
+
+        const { results } = await env.DB.prepare(query).bind(...params).all();
+        
+        return jsonResponse(results.map((r: any) => ({
+            id: r.id,
+            term: r.term,
+            definition: r.definition,
+            phonetic: r.phonetic,
+            exampleSentence: r.example_sentence,
+            exampleTranslation: r.example_translation,
+            tags: r.tags ? JSON.parse(r.tags) : [],
+            alpha: r.alpha,
+            beta: r.beta,
+            halflife: r.halflife,
+            dueDate: r.due_date,
+            lastSeen: r.last_seen,
+            totalExposure: r.total_exposure,
+            createdAt: r.created_at
+        })));
     } catch (e: any) {
         return jsonResponse({ error: e.message }, 500);
     }
@@ -79,20 +66,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     try {
         const word = await request.json() as any;
-        if (!word.id || !word.term) return jsonResponse({ error: 'Invalid data' }, 400);
-
         await env.DB.prepare(
             `INSERT INTO words (
                 id, user_id, term, definition, phonetic, example_sentence, 
-                example_translation, tags, weight, stability, due_date, 
+                example_translation, tags, alpha, beta, halflife, due_date, 
                 last_seen, total_exposure, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
             word.id, user.sub, word.term, word.definition, word.phonetic || null,
             word.exampleSentence || null, word.exampleTranslation || null,
             JSON.stringify(word.tags || []), 
-            word.weight || 0.2, 
-            word.stability || 0, 
+            word.alpha || 3.0, 
+            word.beta || 1.0, 
+            word.halflife || 1440, 
             word.dueDate || Date.now(), 
             word.lastSeen || 0,
             word.totalExposure || 0,

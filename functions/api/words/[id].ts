@@ -22,8 +22,8 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     const res = await env.DB.prepare(
         `UPDATE words SET 
             term = ?, definition = ?, phonetic = ?, example_sentence = ?, 
-            example_translation = ?, tags = ?, weight = ?, stability = ?, 
-            due_date = ?, last_seen = ?, total_exposure = ? 
+            example_translation = ?, tags = ?, alpha = ?, beta = ?, 
+            halflife = ?, due_date = ?, last_seen = ?, total_exposure = ? 
          WHERE id = ? AND user_id = ?`
     ).bind(
         word.term, 
@@ -32,8 +32,9 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         word.exampleSentence,
         word.exampleTranslation, 
         JSON.stringify(word.tags), 
-        word.weight, 
-        word.stability, 
+        word.alpha, 
+        word.beta, 
+        word.halflife, 
         word.dueDate, 
         word.lastSeen,
         word.totalExposure,

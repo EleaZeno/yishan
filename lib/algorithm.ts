@@ -2,69 +2,74 @@
 import { Word, InteractionMetrics } from '../types';
 
 /**
- * 忆闪 (YiShan) 认知流算法 (Flux-v4.2)
- * 核心逻辑：基于反应时(Reaction Time)与交互摩擦力(Interaction Friction)的隐式记忆评估
+ * 忆闪 (YiShan) 贝叶斯自适应算法 (Flux-v5 Bayesian)
+ * 核心：使用 Beta 分布动态更新记忆半衰期
  */
-export const ALGO_CONFIG = {
-  INSTANT_RECALL: 900,      // 极速反射阈值
-  QUICK_RECALL: 2800,       // 快速回忆阈值
-  DEEP_FRICTION: 7000,      // 深度思考阈值
-  STABILITY_GROWTH: 2.2,    // 稳定性增长基数
-  MAX_INTERVAL_MIN: 525600, // 最大间隔：1年
+const CONFIG = {
+  RECALL_THRESHOLD: 0.85,    // 当召回率低于此值时，标记为“到期”
+  DEFAULT_HALFLIFE: 24 * 60, // 初始半衰期：1天 (分钟)
+  MIN_HALFLIFE: 10,          // 最小半衰期：10分钟
+  MAX_HALFLIFE: 525600,      // 最大半衰期：1年
+  REACTION_BONUS_MAX: 0.2,   // 快速反应给予的额外权重增益
 };
 
+/**
+ * 计算在给定时间间隔后的召回概率
+ * P(recall) = 2^(-Δt / halflife)
+ */
+export const predictRecallProbability = (word: Word, now: number): number => {
+  if (word.lastSeen === 0) return 0;
+  const elapsed = (now - word.lastSeen) / (1000 * 60); // 分钟
+  return Math.pow(2, -elapsed / (word.halflife || CONFIG.DEFAULT_HALFLIFE));
+};
+
+/**
+ * 贝叶斯后验更新
+ */
 export const evaluateInteraction = (word: Word, metrics: InteractionMetrics) => {
-  let currentWeight = word.weight || 0.2;
-  let newWeight = currentWeight;
+  const now = Date.now();
+  const isSuccess = metrics.direction === 'left';
+  
+  // 1. 获取当前参数
+  let { alpha, beta, halflife } = word;
+  const elapsed = word.lastSeen === 0 ? 0 : (now - word.lastSeen) / (1000 * 60);
 
-  // 方向逻辑：左滑=掌握(Mastered)，右滑=不熟(Review)
-  if (metrics.direction === 'right') {
-    // 标记为需要重学：权重降低，间隔归零
-    newWeight = Math.max(0.1, currentWeight * 0.4);
-    return {
-      weight: newWeight,
-      stability: 10, // 10分钟后再次出现
-      dueDate: Date.now() + (10 * 60 * 1000)
-    };
-  }
-
-  // 掌握逻辑：根据交互质量动态调整权重
-  if (!metrics.isFlipped && metrics.durationMs < ALGO_CONFIG.INSTANT_RECALL) {
-    // 极速掌握：完全不需要看背面，大幅提权
-    newWeight = Math.min(1.0, currentWeight + 0.35);
-  } else if (metrics.durationMs < ALGO_CONFIG.QUICK_RECALL) {
-    // 较快掌握：权重稳定提升
-    newWeight = Math.min(1.0, currentWeight + 0.2);
+  // 2. 更新 alpha/beta (简化版共轭先验更新)
+  // 如果成功，alpha 增加；如果失败，beta 增加
+  if (isSuccess) {
+    // 反应时奖惩：反应越快，alpha 增益越高
+    const reactionFactor = Math.max(0, 1 - metrics.durationMs / 3000);
+    alpha += 1 + reactionFactor * CONFIG.REACTION_BONUS_MAX;
+    
+    // 半衰期动态调整
+    // 如果在快遗忘时想起来了，半衰期大幅增长；如果在刚记住时想起来，半衰期小幅增长
+    const scalingFactor = 1 + (alpha / (alpha + beta)) * 1.5;
+    halflife = Math.min(CONFIG.MAX_HALFLIFE, halflife * scalingFactor);
   } else {
-    // 存在摩擦：根据是否听发音进一步微调
-    let penalty = 0;
-    if (metrics.audioPlayedCount > 0) penalty += 0.05;
-    if (metrics.durationMs > ALGO_CONFIG.DEEP_FRICTION) penalty += 0.1;
-    newWeight = Math.min(1.0, Math.max(0.2, currentWeight + 0.1 - penalty));
+    beta += 1;
+    // 失败后半衰期剧减
+    halflife = Math.max(CONFIG.MIN_HALFLIFE, halflife * 0.2);
+    // 重置部分权重，使其更频繁出现
+    alpha = Math.max(2, alpha * 0.5);
   }
 
-  // 计算新的复习间隔
-  let nextStability = 0;
-  if (newWeight < 0.3) {
-    nextStability = 30; // 30分钟
-  } else if (newWeight < 0.5) {
-    nextStability = 1440; // 1天
-  } else {
-    const base = word.stability || 1440;
-    const factor = ALGO_CONFIG.STABILITY_GROWTH * (0.8 + newWeight);
-    nextStability = Math.min(Math.round(base * factor), ALGO_CONFIG.MAX_INTERVAL_MIN);
-  }
-
+  // 3. 计算下次复习时间
+  // 根据 P(recall) = 0.85 倒推所需时间 Δt
+  // Δt = -halflife * log2(0.85)
+  const nextInterval = Math.round(halflife * 0.234); // -log2(0.85) ≈ 0.234
+  
   return {
-    weight: newWeight,
-    stability: nextStability,
-    dueDate: Date.now() + (nextStability * 60 * 1000)
+    alpha,
+    beta,
+    halflife,
+    dueDate: now + nextInterval * 60 * 1000
   };
 };
 
 export const getInitialWordState = () => ({
-  weight: 0.2,
-  stability: 0,
+  alpha: 3,       // 初始成功先验
+  beta: 1,        // 初始失败先验
+  halflife: CONFIG.DEFAULT_HALFLIFE,
   lastSeen: 0,
   totalExposure: 0,
   dueDate: Date.now(),

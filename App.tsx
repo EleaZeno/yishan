@@ -9,7 +9,7 @@ import Library from './components/Library';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
-import { getInitialWordState } from './lib/algorithm';
+import { getInitialWordState, predictRecallProbability } from './lib/algorithm';
 import { Loader2 } from 'lucide-react';
 import { getCoreVocabulary } from './data/vocabulary';
 import { initAudio } from './lib/sound';
@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [stats, setStats] = useState<Stats>({ 
       totalSignals: 0, 
       fadingSignals: 0, 
-      stabilizedSignals: 0, 
+      averageRecallProb: 0, 
       connectivity: 0 
   });
   const [chartData, setChartData] = useState<Word[]>([]); 
@@ -73,13 +73,21 @@ const App: React.FC = () => {
       const statsWords = await db.getAllWordsForStats();
       setChartData(statsWords);
       
+      const now = Date.now();
+      const avgProb = statsWords.length > 0 
+          ? statsWords.reduce((acc, w) => acc + predictRecallProbability(w, now), 0) / statsWords.length
+          : 0;
+
+      // 这里的 connectivity 映射到半衰期的分布情况
+      const connectivity = statsWords.length > 0 
+          ? Math.round((statsWords.filter(w => w.halflife > 10080).length / statsWords.length) * 100) 
+          : 0;
+
       setStats({
         totalSignals: statsWords.length,
         fadingSignals: due.length,
-        stabilizedSignals: statsWords.filter(w => (w.weight || 0) > 0.7).length,
-        connectivity: statsWords.length > 0 
-            ? Math.round((statsWords.reduce((acc, w) => acc + (w.weight || 0), 0) / statsWords.length) * 100) 
-            : 0
+        averageRecallProb: Math.round(avgProb * 100),
+        connectivity
       });
 
     } catch (e) {

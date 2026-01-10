@@ -1,17 +1,16 @@
 
+// Add missing D1 type definitions
 export interface D1Result<T = unknown> {
   results: T[];
   success: boolean;
   meta: any;
-  error?: string;
 }
 
 export interface D1PreparedStatement {
   bind(...values: any[]): D1PreparedStatement;
-  first<T = unknown>(column?: string): Promise<T | null>;
-  run<T = unknown>(): Promise<D1Result<T>>;
   all<T = unknown>(): Promise<D1Result<T>>;
-  raw<T = unknown>(): Promise<T[]>;
+  run(): Promise<D1Result>;
+  first<T = unknown>(colName?: string): Promise<T | null>;
 }
 
 export interface D1Database {
@@ -26,25 +25,19 @@ export interface Env {
   JWT_SECRET: string;
 }
 
-export type PagesFunction<
-  Env = any,
-  Params extends string = any,
-  Data extends Record<string, unknown> = Record<string, unknown>
-> = (context: {
-  request: Request;
-  functionPath: string;
-  waitUntil: (promise: Promise<any>) => void;
-  next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
-  env: Env;
-  params: Record<Params, string>;
-  data: Data;
-}) => Response | Promise<Response>;
-
-let isDbInitialized = false;
+// Add missing PagesFunction definition for Cloudflare Pages Functions
+export type PagesFunction<E = Env, P extends string = string, D = any> = (
+  context: {
+    request: Request;
+    env: E;
+    params: { [key in P]: string };
+    data: D;
+    next: () => Promise<Response>;
+    waitUntil: (promise: Promise<any>) => void;
+  }
+) => Response | Promise<Response>;
 
 export async function ensureTables(db: D1Database) {
-    if (isDbInitialized) return;
-    
     try {
         // 用户表
         await db.prepare(`
@@ -57,7 +50,7 @@ export async function ensureTables(db: D1Database) {
             )
         `).run();
 
-        // 单词表 - 字段与前端模型同步
+        // 贝叶斯单词表
         await db.prepare(`
             CREATE TABLE IF NOT EXISTS words (
                 id TEXT PRIMARY KEY,
@@ -68,8 +61,9 @@ export async function ensureTables(db: D1Database) {
                 example_sentence TEXT,
                 example_translation TEXT,
                 tags TEXT,
-                weight REAL DEFAULT 0.2,
-                stability INTEGER DEFAULT 0,
+                alpha REAL DEFAULT 3.0,
+                beta REAL DEFAULT 1.0,
+                halflife INTEGER DEFAULT 1440,
                 due_date INTEGER,
                 last_seen INTEGER,
                 total_exposure INTEGER DEFAULT 0,
@@ -79,11 +73,14 @@ export async function ensureTables(db: D1Database) {
         `).run();
 
         await db.prepare(`CREATE INDEX IF NOT EXISTS idx_words_user_due ON words(user_id, due_date, is_deleted)`).run();
-        
-        isDbInitialized = true;
     } catch (e) {
         console.error("D1 Init Failed:", e);
     }
+}
+
+// ... 保持 JWT 和密码加密函数不变 ...
+export function jsonResponse(data: any, status = 200) {
+    return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 }
 
 export async function signToken(payload: any, secret: string): Promise<string> {
@@ -131,7 +128,4 @@ function hexToBuf(hex: string): Uint8Array {
     const bytes = new Uint8Array(hex.length / 2);
     for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
     return bytes;
-}
-export function jsonResponse(data: any, status = 200) {
-    return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 }
