@@ -163,4 +163,5 @@ export const GRADE8_SEM2_WORDS: Partial<Word>[] = [
   { term: "recommend", definition: "v. to suggest", phonetic: "/rekamend/", exampleSentence: "I recommend this.", exampleTranslation: "Suggest this", tags: ["G8-S2", "verb"] },
   { term: "comment", definition: "n. your opinion", phonetic: "/kament/", exampleSentence: "Leave a comment.", exampleTranslation: "Your opinion", tags: ["G8-S2", "noun"] },
   { term: "review", definition: "n. opinion about product", phonetic: "/riviu:/", exampleSentence: "Read reviews.", exampleTranslation: "Product opinion", tags: ["G8-S2", "noun"] },
-  { term: "perfect", definition: "adj. completely good", phonetic: "/parfekt/", exampleSentence: "Perfect!", exampleTranslation: "Completely good", tags: ["G8
+  { term: "perfect", definition: "adj. completely good", phonetic: "/parfekt/", exampleSentence: "Perfect!", exampleTranslation: "Completely good", tags: ["G8-S2", "adj"] }
+];
