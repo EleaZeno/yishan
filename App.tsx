@@ -8,6 +8,8 @@ import StudySession from './components/StudySession';
 import Library from './components/Library';
 import DiagnosticCenter from './components/DiagnosticCenter';
 import VocabTest from './components/VocabTest';
+import GrammarTest from './components/GrammarTest';
+import ReadingTest from './components/ReadingTest';
 import Practice from './components/Practice';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
@@ -23,6 +25,7 @@ const App: React.FC = () => {
   const [authChecking, setAuthChecking] = useState(true);
 
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTest, setActiveTest] = useState<string | null>(null);
   const [dueWords, setDueWords] = useState<Word[]>([]);
   const [stats, setStats] = useState<Stats>({ 
       totalSignals: 0, 
@@ -211,8 +214,34 @@ const App: React.FC = () => {
           />
       )}
 
-      {activeTab === 'diagnose' && (
-          <DiagnosticCenter userId={user?.id} />
+      {activeTab === 'diagnose' && !activeTest && (
+          <DiagnosticCenter 
+            userId={user?.id} 
+            onStartTest={(testType) => {
+              setActiveTest(testType);
+            }}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'vocab' && (
+          <VocabTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'grammar' && (
+          <GrammarTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'reading' && (
+          <ReadingTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
       )}
 
       {activeTab === 'practice' && (
