@@ -4,7 +4,7 @@ import { Word } from '../types';
 import { Search, BookDown, Loader2, Trash2, BookOpen } from 'lucide-react';
 import clsx from 'clsx';
 import { db } from '../services/storage';
-import { getVocabularyBooks, getWordsFromBook } from '../data/vocabulary';
+import { getBooksWithFallback, getBookWordsWithFallback } from '../services/vocabulary';
 import BookSelector from './BookSelector';
 
 interface LibraryProps {
@@ -66,11 +66,12 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
   // Note: For real scalability, search should be server-side.
   const filteredWords = words.filter(w => w.term.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  // 导入词汇书
+  // 导入词汇书（从云端获取）
   const handleImportBook = async (bookId: string) => {
     setIsImportingBook(true);
     try {
-        const bookWords = getWordsFromBook(bookId);
+        // 优先从云端获取词汇
+        const bookWords = await getBookWordsWithFallback(bookId);
         if (bookWords.length === 0) {
             alert('该词汇书暂无内容');
             return;
