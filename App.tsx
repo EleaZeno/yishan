@@ -6,6 +6,9 @@ import AuthPage from './components/AuthPage';
 import Dashboard from './components/Dashboard';
 import StudySession from './components/StudySession';
 import Library from './components/Library';
+import DiagnosticCenter from './components/DiagnosticCenter';
+import VocabTest from './components/VocabTest';
+import Practice from './components/Practice';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
@@ -206,6 +209,14 @@ const App: React.FC = () => {
             isImporting={isImporting}
             onDelete={handleDeleteWord}
           />
+      )}
+
+      {activeTab === 'diagnose' && (
+          <DiagnosticCenter userId={user?.id} />
+      )}
+
+      {activeTab === 'practice' && (
+          <Practice userId={user?.id} />
       )}
 
       <AddWordModal 
