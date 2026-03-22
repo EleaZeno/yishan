@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, Cloud, ShieldCheck } from 'lucide-react';
+import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, Cloud, ShieldCheck, Target, GraduationCap, PenTool } from 'lucide-react';
 import clsx from 'clsx';
 import { User } from '../types';
 
@@ -19,6 +19,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
     { id: 'dashboard', label: '核心', icon: BarChart3 },
     { id: 'study', label: '交互', icon: Brain },
     { id: 'library', label: '词库', icon: BookOpen },
+    { id: 'diagnose', label: '诊断', icon: GraduationCap },
+    { id: 'practice', label: '练习', icon: PenTool },
   ];
 
   return (
