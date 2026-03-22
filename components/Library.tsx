@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Word } from '../types';
-import { Search, BookDown, Loader2, Trash2 } from 'lucide-react';
+import { Search, BookDown, Loader2, Trash2, BookOpen } from 'lucide-react';
 import clsx from 'clsx';
 import { db } from '../services/storage';
+import { getVocabularyBooks, getWordsFromBook } from '../data/vocabulary';
+import BookSelector from './BookSelector';
 
 interface LibraryProps {
   onImportCore: () => void;
@@ -12,6 +14,9 @@ interface LibraryProps {
 }
 
 const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }) => {
+  const [showBookSelector, setShowBookSelector] = useState(false);
+  const [selectedBookId, setSelectedBookId] = useState<string | undefined>();
+  const [isImportingBook, setIsImportingBook] = useState(false);
   const [words, setWords] = useState<Word[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -61,6 +66,46 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
   // Note: For real scalability, search should be server-side.
   const filteredWords = words.filter(w => w.term.toLowerCase().includes(searchTerm.toLowerCase()));
 
+  // 导入词汇书
+  const handleImportBook = async (bookId: string) => {
+    setIsImportingBook(true);
+    try {
+        const bookWords = getWordsFromBook(bookId);
+        if (bookWords.length === 0) {
+            alert('该词汇书暂无内容');
+            return;
+        }
+        const wordsToImport = bookWords.map(v => ({
+            ...v,
+            id: crypto.randomUUID(),
+            term: v.term!,
+            definition: v.definition!,
+            tags: v.tags || [],
+            ...{
+                alpha: 3,
+                beta: 1,
+                halflife: 1440,
+                lastSeen: 0,
+                totalExposure: 0,
+                dueDate: Date.now(),
+                createdAt: Date.now()
+            }
+        } as Word));
+        await db.importWords(wordsToImport);
+        // 重新加载数据
+        setPage(1);
+        setWords([]);
+        setHasMore(true);
+        fetchWords(1, true);
+        alert(`成功导入 ${wordsToImport.length} 个词汇！`);
+    } catch (e) {
+        console.error(e);
+        alert('导入失败');
+    } finally {
+        setIsImportingBook(false);
+    }
+  };
+
   return (
     <div className="space-y-4 h-full flex flex-col">
         <div className="flex gap-2">
@@ -75,9 +120,17 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
                 />
             </div>
             <button 
-                onClick={onImportCore}
+                onClick={() => setShowBookSelector(true)}
                 disabled={isImporting}
                 className="px-4 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-indigo-600 font-medium flex items-center gap-2 whitespace-nowrap shadow-sm"
+            >
+                {isImporting ? <Loader2 size={18} className="animate-spin"/> : <BookOpen size={18} />}
+                <span className="hidden sm:inline">词库</span>
+            </button>
+            <button 
+                onClick={onImportCore}
+                disabled={isImporting}
+                className="px-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium flex items-center gap-2 whitespace-nowrap shadow-sm"
             >
                 {isImporting ? <Loader2 size={18} className="animate-spin"/> : <BookDown size={18} />}
                 <span className="hidden sm:inline">导入</span>
@@ -136,6 +189,21 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
                 </div>
             )}
         </div>
+        
+        {/* 词汇书选择弹窗 */}
+        {showBookSelector && (
+            <BookSelector
+                learnedWords={new Set(words.map(w => w.term))}
+                selectedBookId={selectedBookId}
+                onSelectBook={(bookId) => {
+                    setSelectedBookId(bookId);
+                    setShowBookSelector(false);
+                    // 导入选中的词汇书
+                    handleImportBook(bookId);
+                }}
+                onClose={() => setShowBookSelector(false)}
+            />
+        )}
     </div>
   );
 };
