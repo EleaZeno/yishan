@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Book, BookOpen, Check, ChevronRight, Star } from 'lucide-react';
-import { getVocabularyBooks, getBookStats } from '../data/vocabulary';
+import React, { useState, useEffect } from 'react';
+import { Book, BookOpen, Check, ChevronRight, Star, Loader2 } from 'lucide-react';
+import { getBooksWithFallback, getBookWordsWithFallback } from '../services/vocabulary';
+import { VocabularyBook } from '../services/vocabulary';
 import { clsx } from 'clsx';
 
 interface BookSelectorProps {
@@ -16,8 +17,25 @@ const BookSelector: React.FC<BookSelectorProps> = ({
   onSelectBook,
   onClose,
 }) => {
-  const books = getVocabularyBooks();
+  const [books, setBooks] = useState<VocabularyBook[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
+
+  useEffect(() => {
+    loadBooks();
+  }, []);
+
+  const loadBooks = async () => {
+    setLoading(true);
+    try {
+      const data = await getBooksWithFallback();
+      setBooks(data);
+    } catch (error) {
+      console.error('Failed to load books:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 按年级分组
   const grades = ['all', ...new Set(books.map(b => b.grade))];
@@ -87,13 +105,20 @@ const BookSelector: React.FC<BookSelectorProps> = ({
           </div>
         </div>
 
+        {/* 加载状态 */}
+        {loading && (
+          <div className="px-6 py-8 flex flex-col items-center justify-center">
+            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-2" />
+            <p className="text-sm text-gray-500">加载词库中...</p>
+          </div>
+        )}
+
         {/* 单词书列表 */}
         <div className="px-6 py-4 overflow-y-auto max-h-[50vh]">
           <div className="space-y-3">
             {filteredBooks.map((book) => {
-              const stats = getBookStats(book.id, learnedWords);
               const isSelected = selectedBookId === book.id;
-              const progress = stats.total > 0 ? (stats.learned / stats.total) * 100 : 0;
+              const progress = 0; // 云端模式下暂不支持进度统计
 
               return (
                 <button
@@ -124,7 +149,7 @@ const BookSelector: React.FC<BookSelectorProps> = ({
                       </div>
                       
                       {/* 英文名 */}
-                      <p className="text-sm text-gray-500 mb-2">{book.nameEn}</p>
+                      <p className="text-sm text-gray-500 mb-2">{book.name_en}</p>
                       
                       {/* 描述 */}
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">
@@ -134,7 +159,7 @@ const BookSelector: React.FC<BookSelectorProps> = ({
                       {/* 标签 */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                          {book.wordCount} 词汇
+                          {book.word_count} 词汇
                         </span>
                         <span className={clsx('text-xs px-2 py-1 rounded-full', getDifficultyColor(book.difficulty))}>
                           {getDifficultyText(book.difficulty)}
@@ -153,12 +178,12 @@ const BookSelector: React.FC<BookSelectorProps> = ({
                     )} />
                   </div>
 
-                  {/* 学习进度条 */}
+                  {/* 学习进度条 - 云端模式暂隐藏 */}
                   {progress > 0 && (
                     <div className="mt-4">
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>学习进度</span>
-                        <span>{stats.learned}/{stats.total}</span>
+                        <span>云端词库</span>
                       </div>
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div 
