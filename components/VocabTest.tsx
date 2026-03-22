@@ -3,6 +3,7 @@ import { Brain, CheckCircle, XCircle, Clock, ArrowRight, RefreshCw, Target, Zap 
 
 interface VocabTestProps {
   userId?: string;
+  onBack?: () => void;
   onComplete?: (result: { level: number; name: string; estimatedWords: number; correct: number; total: number }) => void;
 }
 
@@ -40,7 +41,7 @@ const VOCAB_TEST_WORDS = [
   { word: 'add', definition: 'v. 添加', difficulty: 0.1 },
 ];
 
-const VocabTest: React.FC<VocabTestProps> = ({ userId, onComplete }) => {
+const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack, onComplete }) => {
   const [testState, setTestState] = useState<'idle' | 'testing' | 'complete'>('idle');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<boolean[]>([]);
