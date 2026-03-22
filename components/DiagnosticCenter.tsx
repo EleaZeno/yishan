@@ -5,6 +5,7 @@ import AbilityRadar from './AbilityRadar';
 
 interface DiagnosticCenterProps {
   userId?: string;
+  onStartTest?: (testType: string) => void;
 }
 
 interface StudentAbility {
@@ -17,7 +18,7 @@ interface StudentAbility {
   predictedScore: number;
 }
 
-const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId }) => {
+const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest }) => {
   const [abilities, setAbilities] = useState<StudentAbility>({
     vocabulary: 0.5,
     grammar: 0.5,
