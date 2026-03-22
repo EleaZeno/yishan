@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -24,7 +24,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
-  // 解析主题
   const resolveTheme = useCallback((t: Theme): 'light' | 'dark' => {
     if (t === 'system') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -32,27 +31,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return t;
   }, []);
 
-  // 应用主题到 document
   const applyTheme = useCallback((t: 'light' | 'dark') => {
     const root = document.documentElement;
     
     if (t === 'dark') {
       root.classList.add('dark');
-      root.style.colorScheme = 'dark';
     } else {
       root.classList.remove('dark');
-      root.style.colorScheme = 'light';
     }
     
     setResolvedTheme(t);
   }, []);
 
-  // 初始化和监听系统主题变化
   useEffect(() => {
     const resolved = resolveTheme(theme);
     applyTheme(resolved);
 
-    // 监听系统主题变化
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
       if (theme === 'system') {
@@ -64,35 +58,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme, resolveTheme, applyTheme]);
 
-  // 设置主题
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t);
     localStorage.setItem(STORAGE_KEY, t);
     applyTheme(resolveTheme(t));
   }, [resolveTheme, applyTheme]);
 
-  // 切换主题
   const toggleTheme = useCallback(() => {
     const nextTheme = resolvedTheme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
   }, [resolvedTheme, setTheme]);
 
-  return (
-    <ThemeContext.Provider
-      value={{
-        theme,
-        resolvedTheme,
-        setTheme,
-        toggleTheme,
-        isDark: resolvedTheme === 'dark',
-      }}
-    >
-      {children}
-    </ThemeContext.Provider>
-  );
+  const value = {
+    theme,
+    resolvedTheme,
+    setTheme,
+    toggleTheme,
+    isDark: resolvedTheme === 'dark',
+  };
+
+  return React.createElement(ThemeContext.Provider, { value }, children);
 }
 
-// Hook
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
@@ -101,7 +88,6 @@ export function useTheme() {
   return context;
 }
 
-// 便捷hook（不需要 Provider）
 export function useSimpleTheme() {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {

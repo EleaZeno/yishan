@@ -20,6 +20,9 @@ export interface Word {
   dueDate: number;        // 下次应复习时间戳 (当 P(recall) < 0.85 时)
   
   createdAt: number;
+  
+  // 稳定性指数（由 halflife 计算得出）
+  stability?: number;
 }
 
 export interface InteractionMetrics {
