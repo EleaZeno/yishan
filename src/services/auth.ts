@@ -1,28 +1,30 @@
-export const VALID_USERS = [
-  { id: '1', email: '111@111.com', password: '111', name: 'User' }
-];
+const API_BASE = 'https://yishan-api.15703377328.workers.dev';
 
 export const authService = {
   login: async (email: string, password: string) => {
-    const user = VALID_USERS.find(u => u.email === email && u.password === password);
-    if (!user) {
-      throw new Error('Invalid credentials');
-    }
-    const { password: _, ...safeUser } = user;
-    const token = btoa(JSON.stringify({ id: user.id, email: user.email, exp: Date.now() + 86400000 }));
-    return { token, user: safeUser };
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const data = await res.json();
+    localStorage.setItem('yishan_token', data.token);
+    localStorage.setItem('yishan_user', JSON.stringify(data.user));
+    return data;
   },
   
-  register: async (email: string, password: string) => {
-    const exists = VALID_USERS.find(u => u.email === email);
-    if (exists) {
-      throw new Error('User already exists');
-    }
-    const newUser = { id: String(VALID_USERS.length + 1), email, password, name: email };
-    VALID_USERS.push(newUser);
-    const { password: _, ...safeUser } = newUser;
-    const token = btoa(JSON.stringify({ id: newUser.id, email: newUser.email, exp: Date.now() + 86400000 }));
-    return { token, user: safeUser };
+  register: async (email: string, password: string, name?: string) => {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name })
+    });
+    if (!res.ok) throw new Error('Registration failed');
+    const data = await res.json();
+    localStorage.setItem('yishan_token', data.token);
+    localStorage.setItem('yishan_user', JSON.stringify(data.user));
+    return data;
   },
   
   logout: () => {
@@ -34,26 +36,62 @@ export const authService = {
   
   getCurrentUser: () => {
     const user = localStorage.getItem('yishan_user');
-    if (!user) return null;
-    try {
-      return JSON.parse(user);
-    } catch {
-      return null;
-    }
+    return user ? JSON.parse(user) : null;
   },
   
   setSession: (token: string, user: any) => {
     localStorage.setItem('yishan_token', token);
     localStorage.setItem('yishan_user', JSON.stringify(user));
+  }
+};
+
+export const api = {
+  getBooks: async () => {
+    const res = await fetch(`${API_BASE}/api/books`);
+    return res.json();
   },
   
-  validateToken: (token: string) => {
-    try {
-      const data = JSON.parse(atob(token));
-      return data.exp > Date.now();
-    } catch {
-      return false;
-    }
+  getWords: async (bookId: string) => {
+    const res = await fetch(`${API_BASE}/api/words/${bookId}`);
+    return res.json();
+  },
+  
+  getProgress: async (userId: string) => {
+    const res = await fetch(`${API_BASE}/api/progress?user_id=${userId}`);
+    return res.json();
+  },
+  
+  updateProgress: async (userId: string, wordId: string, correct: boolean) => {
+    const res = await fetch(`${API_BASE}/api/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, word_id: wordId, correct })
+    });
+    return res.json();
+  },
+  
+  getTestResults: async (userId: string) => {
+    const res = await fetch(`${API_BASE}/api/tests?user_id=${userId}`);
+    return res.json();
+  },
+  
+  submitTest: async (data: any) => {
+    const res = await fetch(`${API_BASE}/api/tests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+  
+  getPrediction: async (userId: string, examType: string = 'gaokao') => {
+    const res = await fetch(`${API_BASE}/api/predict?user_id=${userId}&exam_type=${examType}`);
+    return res.json();
+  },
+  
+  getStats: async (userId: string) => {
+    const res = await fetch(`${API_BASE}/api/stats?user_id=${userId}`);
+    return res.json();
   }
 };
 
