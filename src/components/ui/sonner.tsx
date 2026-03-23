@@ -1,5 +1,9 @@
 import React from 'react';
 
-export function sonner(props: any) {
-  return <div {...props}>sonner</div>;
+export function Toaster(props: any) {
+  return <div {...props} />;
+}
+
+export function toast(props: any) {
+  console.log('toast', props);
 }
