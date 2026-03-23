@@ -1,5 +1,39 @@
-import React from 'react';
+import * as React from "react"
 
-export function avatar(props: any) {
-  return <div {...props}>avatar</div>;
-}
+const Avatar = React.forwardRef<
+  React.ElementRef<"span">,
+  React.ComponentPropsWithoutRef<"span">
+>(({ className, ...props }, ref) => (
+  <span
+    ref={ref}
+    className={elative flex h-10 w-10 shrink-0 overflow-hidden rounded-full }
+    {...props}
+  />
+))
+Avatar.displayName = "Avatar"
+
+const AvatarImage = React.forwardRef<
+  React.ElementRef<"img">,
+  React.ComponentPropsWithoutRef<"img">
+>(({ className, ...props }, ref) => (
+  <img
+    ref={ref}
+    className={spect-square h-full w-full }
+    {...props}
+  />
+))
+AvatarImage.displayName = "AvatarImage"
+
+const AvatarFallback = React.forwardRef<
+  React.ElementRef<"span">,
+  React.ComponentPropsWithoutRef<"span">
+>(({ className, ...props }, ref) => (
+  <span
+    ref={ref}
+    className={lex h-full w-full items-center justify-center rounded-full bg-muted }
+    {...props}
+  />
+))
+AvatarFallback.displayName = "AvatarFallback"
+
+export { Avatar, AvatarImage, AvatarFallback }
