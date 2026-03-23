@@ -1,5 +1,5 @@
 export const VALID_USERS = [
-  { id: '1', email: '111', password: '111', name: 'User' }
+  { id: '1', email: '111@111.com', password: '111', name: 'User' }
 ];
 
 export const authService = {
