@@ -1,2 +1,3 @@
-export const vocabulary = [];
-export default vocabulary;
+export const vocabulary = []
+export const getCoreVocabulary = () => vocabulary
+export default vocabulary
