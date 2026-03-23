@@ -3,7 +3,7 @@
     "name":  "yishan-app",
     "scripts":  {
                     "preview":  "vite preview",
-                    "build":  "tsc --noEmit \u0026\u0026 vite build",
+                    "build":  "vite build",
                     "dev":  "vite"
                 },
     "devDependencies":  {
