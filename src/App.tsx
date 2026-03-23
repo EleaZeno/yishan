@@ -21,9 +21,9 @@ export default function App() {
       color: 'white',
       padding: '20px'
     }}>
-      <h1 style={{ fontSize: '3rem', marginBottom: '20px' }}>蹇嗛棯</h1>
-      <p style={{ fontSize: '1.5rem', opacity: 0.9 }}>绉戝璁板繂锛岃繃鐩笉蹇?/p>
-      <p style={{ marginTop: '40px', opacity: 0.7 }}>搴旂敤鍔犺浇涓?..</p>
+      <h1>YiShan</h1>
+      <p>Memory App</p>
+      <p>Loading...</p>
     </div>
   )
 }
