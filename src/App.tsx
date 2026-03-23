@@ -15,7 +15,7 @@ import WritingTest from './components/WritingTest';
 import Practice from './components/Practice';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
-import { authService } from './services/auth';
+import { authService, api } from './services/auth';
 import { getInitialWordState, predictRecallProbability } from './lib/algorithm';
 import { Loader2 } from 'lucide-react';
 import { getCoreVocabulary } from './data/vocabulary';
@@ -78,8 +78,8 @@ const App: React.FC = () => {
       const due = await db.getDueWords();
       setDueWords(due);
 
-      const statsWords = await db.getAllWordsForStats();
-      setChartData(statsWords);
+      const statsWords = await api.getStats(user.id);
+      setChartData([]);
       
       const now = Date.now();
       const avgProb = statsWords.length > 0 
