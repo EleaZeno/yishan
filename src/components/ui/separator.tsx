@@ -1,5 +1,5 @@
 import React from 'react';
 
-export function separator(props: any) {
-  return <div {...props}>separator</div>;
+export function Separator(props: any) {
+  return <hr {...props} />;
 }
