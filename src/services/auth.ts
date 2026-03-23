@@ -4,4 +4,6 @@ export const auth = {
   logout: () => {},
   getUser: () => null,
 };
+
+export const authService = auth;
 export default auth;
