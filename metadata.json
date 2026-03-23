@@ -1,10 +1,5 @@
 {
-  "name": "忆闪 YiShan",
-  "short_name": "忆闪",
-  "description": "基于认知交互流的科学记忆工具。利用 Flux-v4 算法，实现真正意义上的无感掌握评估。",
-  "theme_color": "#4f46e5",
-  "background_color": "#fcfdfe",
-  "display": "standalone",
-  "orientation": "portrait",
+  "name": "",
+  "description": "",
   "requestFramePermissions": []
 }
