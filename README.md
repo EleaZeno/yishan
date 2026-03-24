@@ -1,3 +1,3 @@
-# YiShan - English Learning App
+# YiShan
 
-Original UI restored.
+All original files restored.
