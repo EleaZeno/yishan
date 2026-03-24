@@ -1,116 +1,284 @@
-import React, { useState, useEffect } from "react";
 
-type Tab = "dashboard" | "library" | "study";
+import React, { useState, useEffect, useCallback } from 'react';
+import Layout from './components/Layout';
+import AddWordModal from './components/AddWordModal';
+import AuthPage from './components/AuthPage';
+import Dashboard from './components/Dashboard';
+import StudySession from './components/StudySession';
+import Library from './components/Library';
+import DiagnosticCenter from './components/DiagnosticCenter';
+import VocabTest from './components/VocabTest';
+import GrammarTest from './components/GrammarTest';
+import ReadingTest from './components/ReadingTest';
+import ListeningTest from './components/ListeningTest';
+import WritingTest from './components/WritingTest';
+import Practice from './components/Practice';
+import { Word, Stats, User } from './types';
+import { db } from './services/storage';
+import { authService } from './services/auth';
+import { getInitialWordState, predictRecallProbability } from './lib/algorithm';
+import { Loader2 } from 'lucide-react';
+import { getCoreVocabulary } from './data/vocabulary';
+import { initAudio } from './lib/sound';
 
-export default function App() {
-  const [tab, setTab] = useState<Tab>("dashboard");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email && password) {
-      setIsLoggedIn(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTest, setActiveTest] = useState<string | null>(null);
+  const [dueWords, setDueWords] = useState<Word[]>([]);
+  const [stats, setStats] = useState<Stats>({ 
+      totalSignals: 0, 
+      fadingSignals: 0, 
+      averageRecallProb: 0, 
+      connectivity: 0 
+  });
+  const [chartData, setChartData] = useState<Word[]>([]); 
+  
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isImporting, setIsImporting] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      return () => {
+          window.removeEventListener('online', handleOnline);
+          window.removeEventListener('offline', handleOffline);
+      }
+  }, []);
+
+  useEffect(() => {
+    const unlockAudio = () => {
+        initAudio();
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    return () => window.removeEventListener('touchstart', unlockAudio);
+  }, []);
+
+  useEffect(() => {
+    const token = authService.getToken();
+    const currentUser = authService.getCurrentUser();
+    if (token && currentUser) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
     }
+    setAuthChecking(false);
+  }, []);
+
+  const loadDashboardData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const due = await db.getDueWords();
+      setDueWords(due);
+
+      const statsWords = await db.getAllWordsForStats();
+      setChartData(statsWords);
+      
+      const now = Date.now();
+      const avgProb = statsWords.length > 0 
+          ? statsWords.reduce((acc, w) => acc + predictRecallProbability(w, now), 0) / statsWords.length
+          : 0;
+
+      // 这里的 connectivity 映射到半衰期的分布情况
+      const connectivity = statsWords.length > 0 
+          ? Math.round((statsWords.filter(w => w.halflife > 10080).length / statsWords.length) * 100) 
+          : 0;
+
+      setStats({
+        totalSignals: statsWords.length,
+        fadingSignals: due.length,
+        averageRecallProb: Math.round(avgProb * 100),
+        connectivity
+      });
+
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) loadDashboardData();
+  }, [isAuthenticated, loadDashboardData]);
+
+  const handleLoginSuccess = () => {
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    setIsAuthenticated(true);
   };
 
-  const handleGuest = () => {
-    setIsLoggedIn(true);
+  const handleGuestAccess = async () => {
+      setUser(null);
+      setIsAuthenticated(true);
+      const due = await db.getDueWords();
+      if (due.length === 0) {
+          const vocab = getCoreVocabulary().map(v => ({
+            ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
+            ...getInitialWordState(), createdAt: Date.now()
+          } as Word));
+          await db.importWords(vocab);
+      }
+      loadDashboardData();
   };
 
-  if (!isLoggedIn) {
-    return (
-      <div style={{ minHeight: "100vh", padding: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ maxWidth: "400px", width: "100%", padding: "24px", border: "1px solid #e5e7eb", borderRadius: "12px" }}>
-          <h1 style={{ fontSize: "24px", fontWeight: "bold", textAlign: "center", marginBottom: "8px" }}>YiShan</h1>
-          <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "24px" }}>Login to continue</p>
-          
-          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div>
-              <label style={{ display: "block", marginBottom: "4px", fontSize: "14px" }}>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ width: "100%", padding: "10px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "16px" }}
-                placeholder="111@111.com"
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "4px", fontSize: "14px" }}>Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: "100%", padding: "10px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "16px" }}
-                placeholder="111"
-              />
-            </div>
-            <button type="submit" style={{ padding: "12px", backgroundColor: "#4f46e5", color: "white", border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: "bold", cursor: "pointer" }}>
-              Login
-            </button>
-          </form>
-          
-          <button onClick={handleGuest} style={{ width: "100%", marginTop: "16px", padding: "12px", backgroundColor: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer" }}>
-            Guest Access
-          </button>
-        </div>
-      </div>
-    );
+  const handleLogout = () => {
+      authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+      setActiveTab('dashboard');
+  };
+
+  const handleAddWord = async (word: Word) => {
+    await db.addWord(word);
+    loadDashboardData();
+  };
+
+  const handleDeleteWord = async (id: string) => {
+    if(confirm('移除此信号连接？')) {
+        await db.deleteWord(id);
+        loadDashboardData();
+    }
+  }
+
+  const handleUpdateWord = (updatedWord: Word) => {
+    setChartData(prev => prev.map(w => w.id === updatedWord.id ? updatedWord : w));
+  };
+  
+  const handleImportCore = async () => {
+      if (!confirm('导入预设信号包？')) return;
+      setIsImporting(true);
+      try {
+          const vocab = getCoreVocabulary().map(v => ({
+            ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
+            ...getInitialWordState(), createdAt: Date.now()
+          } as Word));
+          await db.importWords(vocab);
+          await loadDashboardData();
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setIsImporting(false);
+      }
+  };
+
+  if (authChecking) {
+      return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-slate-300" size={32}/></div>
+  }
+
+  if (!isAuthenticated) {
+      return <AuthPage onLoginSuccess={handleLoginSuccess} onGuestAccess={handleGuestAccess} />
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header style={{ padding: "16px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: "20px", fontWeight: "bold" }}>YiShan</div>
-        <button onClick={() => setIsLoggedIn(false)} style={{ padding: "8px 16px", backgroundColor: "transparent", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer" }}>
-          Logout
-        </button>
-      </header>
+    <Layout 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab}
+      onAddClick={() => setIsAddModalOpen(true)}
+      user={user}
+      onLogout={handleLogout}
+    >
+      {activeTab === 'dashboard' && (
+          <Dashboard 
+            stats={stats} 
+            wordsForChart={chartData} 
+            isOnline={isOnline}
+            onStartStudy={() => setActiveTab('study')}
+          />
+      )}
       
-      <nav style={{ display: "flex", borderBottom: "1px solid #e5e7eb" }}>
-        {(["dashboard", "library", "study"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{ flex: 1, padding: "12px", border: "none", borderBottom: tab === t ? "2px solid #4f46e5" : "2px solid transparent", backgroundColor: tab === t ? "#f3f4f6" : "white", cursor: "pointer", textTransform: "capitalize" }}
-          >
-            {t}
-          </button>
-        ))}
-      </nav>
-      
-      <main style={{ flex: 1, padding: "24px" }}>
-        {tab === "dashboard" && (
-          <div>
-            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>Welcome!</h2>
-            <p style={{ color: "#6b7280" }}>You are logged in as {email || "Guest"}</p>
-            <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-              <div style={{ padding: "16px", backgroundColor: "#f3f4f6", borderRadius: "12px" }}>
-                <div style={{ fontSize: "24px", fontWeight: "bold" }}>50</div>
-                <div style={{ fontSize: "14px", color: "#6b7280" }}>Words Learned</div>
-              </div>
-              <div style={{ padding: "16px", backgroundColor: "#f3f4f6", borderRadius: "12px" }}>
-                <div style={{ fontSize: "24px", fontWeight: "bold" }}>20</div>
-                <div style={{ fontSize: "14px", color: "#6b7280" }}>Mastered</div>
-              </div>
-            </div>
-          </div>
-        )}
-        {tab === "library" && (
-          <div>
-            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>Library</h2>
-            <p style={{ color: "#6b7280" }}>Vocabulary books will appear here.</p>
-          </div>
-        )}
-        {tab === "study" && (
-          <div>
-            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>Study</h2>
-            <p style={{ color: "#6b7280" }}>Start a study session here.</p>
-          </div>
-        )}
-      </main>
-    </div>
+      {activeTab === 'study' && (
+          <StudySession 
+            dueWords={dueWords}
+            onComplete={() => {
+                setActiveTab('dashboard');
+                loadDashboardData();
+            }}
+            onAddWord={() => setIsAddModalOpen(true)}
+            onImportCore={handleImportCore}
+            isImporting={isImporting}
+            onUpdateWord={handleUpdateWord}
+          />
+      )}
+
+      {activeTab === 'library' && (
+          <Library 
+            onImportCore={handleImportCore}
+            isImporting={isImporting}
+            onDelete={handleDeleteWord}
+          />
+      )}
+
+      {activeTab === 'diagnose' && !activeTest && (
+          <DiagnosticCenter 
+            userId={user?.id} 
+            onStartTest={(testType) => {
+              if (testType === 'practice') {
+                setActiveTab('practice');
+              } else {
+                setActiveTest(testType);
+              }
+            }}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'vocab' && (
+          <VocabTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'grammar' && (
+          <GrammarTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'reading' && (
+          <ReadingTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'listening' && (
+          <ListeningTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
+      )}
+
+      {activeTab === 'diagnose' && activeTest === 'writing' && (
+          <WritingTest 
+            userId={user?.id} 
+            onBack={() => setActiveTest(null)}
+          />
+      )}
+
+      {activeTab === 'practice' && (
+          <Practice 
+            userId={user?.id} 
+            onBack={() => setActiveTab('diagnose')}
+          />
+      )}
+
+      <AddWordModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSave={handleAddWord}
+      />
+    </Layout>
   );
-}
+};
+
+export default App;
+
