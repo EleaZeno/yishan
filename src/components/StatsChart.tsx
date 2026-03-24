@@ -64,3 +64,4 @@ const StatsChart: React.FC<StatsChartProps> = ({ words }) => {
 };
 
 export default StatsChart;
+
