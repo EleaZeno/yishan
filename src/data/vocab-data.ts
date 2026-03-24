@@ -159,3 +159,4 @@ export const VOCAB_DATA: VocabItem[] = [
   { word: 'sycophant', pos: 'n.', translation: '马屁精', level: 9 },
   { word: 'truculent', pos: 'adj.', translation: '好斗的', level: 9 }
 ];
+
