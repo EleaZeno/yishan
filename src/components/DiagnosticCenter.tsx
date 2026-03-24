@@ -260,3 +260,4 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
 };
 
 export default DiagnosticCenter;
+
