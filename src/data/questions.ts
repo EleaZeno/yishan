@@ -441,3 +441,4 @@ export function getRandomQuestions(count: number, type?: string): Question[] {
   pool = [...pool].sort(() => Math.random() - 0.5);
   return pool.slice(0, count);
 }
+
