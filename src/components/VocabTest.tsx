@@ -345,3 +345,4 @@ const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack, onComplete }) => 
 };
 
 export default VocabTest;
+
