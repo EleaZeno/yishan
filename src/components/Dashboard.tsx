@@ -1,134 +1,91 @@
-import React, { useState, useEffect } from "react";
-import { Activity, BookOpen, Award, Clock, LogOut } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
+
+import React from 'react';
+import { Stats, Word } from '../types';
+import StatsChart from './StatsChart';
+import { WifiOff, Activity, ShieldCheck } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface DashboardProps {
-  user: { id?: string; email?: string; name?: string } | null;
-  onNavigate: (page: string) => void;
-  onLogout: () => void;
+  stats: Stats;
+  wordsForChart: Word[];
+  isOnline: boolean;
+  onStartStudy: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onLogout }) => {
-  const [stats, setStats] = useState({
-    total_words: 50,
-    mastered_words: 20,
-    study_time: 3600,
-    tests: 5
-  });
-  const [loading, setLoading] = useState(false);
-
-  const formatTime = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
-  };
-
+const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, onStartStudy }) => {
   return (
-    <div className="space-y-6 p-4 pb-20">
-      {/* User Header */}
-      <div className="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white/80 text-sm">Welcome back</p>
-            <h2 className="text-2xl font-bold">{user?.name || user?.email || "Guest"}</h2>
+    <div className="space-y-6 animate-in fade-in duration-500 pb-20">
+      {!isOnline && (
+          <div className="bg-muted text-muted-foreground px-4 py-3 rounded-xl border flex items-center gap-2 text-sm">
+              <WifiOff size={16} />
+              <span>本地暂存模式：交互数据将在连接建立后同步至云端。</span>
+          </div>
+      )}
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-primary text-primary-foreground border-none shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-2 opacity-20"><ShieldCheck size={40} /></div>
+          <CardHeader className="p-5 pb-2">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest opacity-80">待校准信号</CardTitle>
+          </CardHeader>
+          <CardContent className="p-5 pt-0">
+            <h3 className="text-4xl font-black">{stats.fadingSignals}</h3>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader className="p-5 pb-2">
+            <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">总词条负载</CardTitle>
+          </CardHeader>
+          <CardContent className="p-5 pt-0">
+            <h3 className="text-3xl font-black text-foreground">{stats.totalSignals}</h3>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader className="p-5 pb-2">
+            <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">预测记忆留存</CardTitle>
+          </CardHeader>
+          <CardContent className="p-5 pt-0">
+            <h3 className="text-3xl font-black text-emerald-500">{stats.averageRecallProb}%</h3>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader className="p-5 pb-2">
+            <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">高稳定性占比</CardTitle>
+          </CardHeader>
+          <CardContent className="p-5 pt-0">
+            <h3 className="text-3xl font-black text-indigo-500">{stats.connectivity}%</h3>
+          </CardContent>
+        </Card>
+      </div>
+
+      <StatsChart words={wordsForChart} />
+
+      <Card className="bg-slate-900 text-white border-slate-800 rounded-3xl overflow-hidden">
+        <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                  <Activity size={32} />
+              </div>
+              <div>
+                  <h3 className="text-xl font-black tracking-tight">贝叶斯自适应环境</h3>
+                  <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                      {stats.fadingSignals > 0 
+                        ? `Flux-v5 引擎探测到 ${stats.fadingSignals} 个单词召回概率即将跌破 85% 阈值。` 
+                        : "所有已知信号均处于贝叶斯预测的高置信度区间。"}
+                  </p>
+              </div>
           </div>
           <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onLogout}
-            className="text-white hover:bg-white/20"
+              onClick={onStartStudy}
+              size="lg"
+              className="px-10 py-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl transition-all shadow-xl shadow-indigo-900/20 active:scale-95 w-full md:w-auto text-lg"
           >
-            <LogOut size={16} className="mr-1" />
-            Logout
+              启动交互流
           </Button>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <Activity size={16} className="text-primary" />
-              Total Learned
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">{stats.total_words}</div>
-            <p className="text-xs text-muted-foreground">words</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <Award size={16} className="text-green-500" />
-              Mastered
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">{stats.mastered_words}</div>
-            <p className="text-xs text-muted-foreground">words</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <Clock size={16} className="text-blue-500" />
-              Study Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{formatTime(stats.study_time)}</div>
-            <p className="text-xs text-muted-foreground">total time</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-              <Activity size={16} className="text-purple-500" />
-              Tests Taken
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-600">{stats.tests}</div>
-            <p className="text-xs text-muted-foreground">practice tests</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Button className="h-14" onClick={() => onNavigate("library")}>
-          <BookOpen size={20} className="mr-2" />
-          Browse Books
-        </Button>
-        <Button className="h-14" onClick={() => onNavigate("study")}>
-          <Activity size={20} className="mr-2" />
-          Start Study
-        </Button>
-      </div>
-
-      {/* Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Start</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Welcome to YiShan! Start learning vocabulary today.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => onNavigate("library")}>
-              Browse Library
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onNavigate("practice")}>
-              Practice Mode
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
@@ -136,3 +93,4 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onLogout }) => 
 };
 
 export default Dashboard;
+
