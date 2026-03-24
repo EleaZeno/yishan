@@ -1,282 +1,94 @@
+import React, { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import Layout from "./components/Layout";
+import AuthPage from "./components/AuthPage";
+import Dashboard from "./components/Dashboard";
+import Library from "./components/Library";
+import StudySession from "./components/StudySession";
+import Practice from "./components/Practice";
+import DiagnosticCenter from "./components/DiagnosticCenter";
+import VocabTest from "./components/VocabTest";
+import { authService, api } from "./services/auth";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Layout from './components/Layout';
-import AddWordModal from './components/AddWordModal';
-import AuthPage from './components/AuthPage';
-import Dashboard from './components/Dashboard';
-import StudySession from './components/StudySession';
-import Library from './components/Library';
-import DiagnosticCenter from './components/DiagnosticCenter';
-import VocabTest from './components/VocabTest';
-import GrammarTest from './components/GrammarTest';
-import ReadingTest from './components/ReadingTest';
-import ListeningTest from './components/ListeningTest';
-import WritingTest from './components/WritingTest';
-import Practice from './components/Practice';
-import { Word, Stats, User } from './types';
-import { db } from './services/storage';
-import { authService, api } from './services/auth';
-import { getInitialWordState, predictRecallProbability } from './lib/algorithm';
-import { Loader2 } from 'lucide-react';
-import { getCoreVocabulary } from './data/vocabulary';
-import { initAudio } from './lib/sound';
+type Tab = "dashboard" | "library" | "study" | "practice" | "tests" | "diagnostic";
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [authChecking, setAuthChecking] = useState(true);
-
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [activeTest, setActiveTest] = useState<string | null>(null);
-  const [dueWords, setDueWords] = useState<Word[]>([]);
-  const [stats, setStats] = useState<Stats>({ 
-      totalSignals: 0, 
-      fadingSignals: 0, 
-      averageRecallProb: 0, 
-      connectivity: 0 
-  });
-  const [chartData, setChartData] = useState<Word[]>([]); 
-  
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isImporting, setIsImporting] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-      const handleOnline = () => setIsOnline(true);
-      const handleOffline = () => setIsOnline(false);
-      window.addEventListener('online', handleOnline);
-      window.addEventListener('offline', handleOffline);
-      return () => {
-          window.removeEventListener('online', handleOnline);
-          window.removeEventListener('offline', handleOffline);
-      }
-  }, []);
-
-  useEffect(() => {
-    const unlockAudio = () => {
-        initAudio();
-        window.removeEventListener('touchstart', unlockAudio);
-    };
-    window.addEventListener('touchstart', unlockAudio, { passive: true });
-    return () => window.removeEventListener('touchstart', unlockAudio);
-  }, []);
-
-  useEffect(() => {
-    const token = authService.getToken();
-    const currentUser = authService.getCurrentUser();
-    if (token && currentUser) {
+    // Quick auth check
+    const checkAuth = () => {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
         setUser(currentUser);
         setIsAuthenticated(true);
-    }
-    setAuthChecking(false);
-  }, []);
-
-  const loadDashboardData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const due = await db.getDueWords();
-      setDueWords(due);
-
-      const statsWords = await api.getStats(user.id);
-      setChartData([]);
-      
-      const now = Date.now();
-      const avgProb = statsWords.length > 0 
-          ? statsWords.reduce((acc, w) => acc + predictRecallProbability(w, now), 0) / statsWords.length
-          : 0;
-
-      // 这里的 connectivity 映射到半衰期的分布情况
-      const connectivity = statsWords.length > 0 
-          ? Math.round((statsWords.filter(w => w.halflife > 10080).length / statsWords.length) * 100) 
-          : 0;
-
-      setStats({
-        totalSignals: statsWords.length,
-        fadingSignals: due.length,
-        averageRecallProb: Math.round(avgProb * 100),
-        connectivity
-      });
-
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) loadDashboardData();
-  }, [isAuthenticated, loadDashboardData]);
-
-  const handleLoginSuccess = () => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setIsAuthenticated(true);
-  };
-
-  const handleGuestAccess = async () => {
-      setUser(null);
-      setIsAuthenticated(true);
-      const due = await db.getDueWords();
-      if (due.length === 0) {
-          const vocab = getCoreVocabulary().map(v => ({
-            ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
-            ...getInitialWordState(), createdAt: Date.now()
-          } as Word));
-          await db.importWords(vocab);
       }
-      loadDashboardData();
+      setLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      await authService.login(email, password);
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser);
+      setIsAuthenticated(true);
+    } catch (e: any) {
+      alert(e.message || "Login failed");
+    }
   };
 
   const handleLogout = () => {
-      authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
-      setActiveTab('dashboard');
+    authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+    setActiveTab("dashboard");
   };
 
-  const handleAddWord = async (word: Word) => {
-    await db.addWord(word);
-    loadDashboardData();
+  const navigate = (tab: string) => {
+    setActiveTab(tab as Tab);
   };
 
-  const handleDeleteWord = async (id: string) => {
-    if(confirm('移除此信号连接？')) {
-        await db.deleteWord(id);
-        loadDashboardData();
-    }
-  }
-
-  const handleUpdateWord = (updatedWord: Word) => {
-    setChartData(prev => prev.map(w => w.id === updatedWord.id ? updatedWord : w));
-  };
-  
-  const handleImportCore = async () => {
-      if (!confirm('导入预设信号包？')) return;
-      setIsImporting(true);
-      try {
-          const vocab = getCoreVocabulary().map(v => ({
-            ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
-            ...getInitialWordState(), createdAt: Date.now()
-          } as Word));
-          await db.importWords(vocab);
-          await loadDashboardData();
-      } catch (e) {
-          console.error(e);
-      } finally {
-          setIsImporting(false);
-      }
-  };
-
-  if (authChecking) {
-      return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-slate-300" size={32}/></div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
-      return <AuthPage onLoginSuccess={handleLoginSuccess} onGuestAccess={handleGuestAccess} />
+    return <AuthPage onLogin={handleLogin} />;
   }
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return <Dashboard user={user} onNavigate={navigate} onLogout={handleLogout} />;
+      case "library":
+        return <Library userId={user?.id} onBack={() => setActiveTab("dashboard")} />;
+      case "study":
+        return <StudySession userId={user?.id} onComplete={() => setActiveTab("dashboard")} />;
+      case "practice":
+        return <Practice userId={user?.id} />;
+      case "tests":
+        return <VocabTest userId={user?.id} />;
+      default:
+        return <Dashboard user={user} onNavigate={navigate} onLogout={handleLogout} />;
+    }
+  };
+
   return (
-    <Layout 
-      activeTab={activeTab} 
-      onTabChange={setActiveTab}
-      onAddClick={() => setIsAddModalOpen(true)}
-      user={user}
-      onLogout={handleLogout}
-    >
-      {activeTab === 'dashboard' && (
-          <Dashboard 
-            stats={stats} 
-            wordsForChart={chartData} 
-            isOnline={isOnline}
-            onStartStudy={() => setActiveTab('study')}
-          />
-      )}
-      
-      {activeTab === 'study' && (
-          <StudySession 
-            dueWords={dueWords}
-            onComplete={() => {
-                setActiveTab('dashboard');
-                loadDashboardData();
-            }}
-            onAddWord={() => setIsAddModalOpen(true)}
-            onImportCore={handleImportCore}
-            isImporting={isImporting}
-            onUpdateWord={handleUpdateWord}
-          />
-      )}
-
-      {activeTab === 'library' && (
-          <Library 
-            onImportCore={handleImportCore}
-            isImporting={isImporting}
-            onDelete={handleDeleteWord}
-          />
-      )}
-
-      {activeTab === 'diagnose' && !activeTest && (
-          <DiagnosticCenter 
-            userId={user?.id} 
-            onStartTest={(testType) => {
-              if (testType === 'practice') {
-                setActiveTab('practice');
-              } else {
-                setActiveTest(testType);
-              }
-            }}
-          />
-      )}
-
-      {activeTab === 'diagnose' && activeTest === 'vocab' && (
-          <VocabTest 
-            userId={user?.id} 
-            onBack={() => setActiveTest(null)}
-          />
-      )}
-
-      {activeTab === 'diagnose' && activeTest === 'grammar' && (
-          <GrammarTest 
-            userId={user?.id} 
-            onBack={() => setActiveTest(null)}
-          />
-      )}
-
-      {activeTab === 'diagnose' && activeTest === 'reading' && (
-          <ReadingTest 
-            userId={user?.id} 
-            onBack={() => setActiveTest(null)}
-          />
-      )}
-
-      {activeTab === 'diagnose' && activeTest === 'listening' && (
-          <ListeningTest 
-            userId={user?.id} 
-            onBack={() => setActiveTest(null)}
-          />
-      )}
-
-      {activeTab === 'diagnose' && activeTest === 'writing' && (
-          <WritingTest 
-            userId={user?.id} 
-            onBack={() => setActiveTest(null)}
-          />
-      )}
-
-      {activeTab === 'practice' && (
-          <Practice 
-            userId={user?.id} 
-            onBack={() => setActiveTab('diagnose')}
-          />
-      )}
-
-      <AddWordModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-        onSave={handleAddWord}
-      />
-    </Layout>
+    <div className="min-h-screen bg-background">
+      <Layout activeTab={activeTab} onTabChange={setActiveTab} user={user} />
+      <main className="container mx-auto px-4 py-6">
+        {renderContent()}
+      </main>
+    </div>
   );
 };
 
