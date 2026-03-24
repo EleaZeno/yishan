@@ -248,3 +248,4 @@ export function getProgressColor(value: number): string {
   if (value >= 0.4) return '#F59E0B'; // 黄色
   return '#EF4444'; // 红色
 }
+
