@@ -9,5 +9,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  build: {
+    target: 'es2020',
+    cssTarget: 'chrome80',
   }
 })

@@ -68,7 +68,7 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
 
   // Client-side filtering for search (simple version)
   // Note: For real scalability, search should be server-side.
-  const filteredWords = words.filter(w => w.term.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredWords = words.filter(w => (w.term || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   // 导入词汇书（从云端获取）
   const handleImportBook = async (bookId: string) => {
@@ -80,22 +80,21 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
             alert('该词汇书暂无内容');
             return;
         }
-        const wordsToImport = bookWords.map(v => ({
-            ...v,
-            id: crypto.randomUUID(),
-            term: v.term!,
-            definition: v.definition!,
+        const wordsToImport: Word[] = bookWords.map(v => ({
+            id: v.id || crypto.randomUUID(),
+            term: v.term,
+            definition: v.definition,
+            phonetic: v.phonetic,
+            exampleSentence: v.exampleSentence,
             tags: v.tags || [],
-            ...{
-                alpha: 3,
-                beta: 1,
-                halflife: 1440,
-                lastSeen: 0,
-                totalExposure: 0,
-                dueDate: Date.now(),
-                createdAt: Date.now()
-            }
-        } as Word));
+            alpha: 3,
+            beta: 1,
+            halflife: 1440,
+            lastSeen: 0,
+            totalExposure: 0,
+            dueDate: Date.now(),
+            createdAt: Date.now(),
+        }));
         await db.importWords(wordsToImport);
         // 重新加载数据
         setPage(1);
@@ -160,7 +159,7 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete }
                                     <h4 className="font-bold text-foreground text-lg">{word.term}</h4>
                                     <p className="text-sm text-muted-foreground truncate max-w-[200px] md:max-w-md">{word.definition}</p>
                                     <div className="flex gap-2 mt-2">
-                                        {word.tags.map(tag => (
+                                        {(word.tags || []).map(tag => (
                                             <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0.5 rounded">
                                                 {tag}
                                             </Badge>

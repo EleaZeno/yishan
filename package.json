@@ -7,30 +7,32 @@
     "dev": "vite"
   },
   "devDependencies": {
-    "vite": "^6.0.0",
-    "typescript": "^5.7.2",
-    "@types/react-dom": "^19.0.0",
-    "@types/react": "^19.0.0",
-    "@types/node": "^22.0.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "tailwindcss": "^4.0.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32"
+    "postcss": "^8.4.32",
+    "tailwindcss": "^4.0.0",
+    "terser": "^5.46.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0",
+    "wrangler": "^4.77.0"
   },
   "type": "module",
   "dependencies": {
-    "react-dom": "^19.0.0",
-    "lucide-react": "^0.469.0",
-    "sonner": "^1.7.0",
-    "framer-motion": "^11.18.0",
-    "recharts": "^2.15.0",
-    "react": "^19.0.0",
-    "clsx": "^2.1.1",
-    "class-variance-authority": "^0.7.0",
-    "tailwind-merge": "^2.5.0",
     "@base-ui/react": "^1.0.0",
-    "next-themes": "^0.4.0"
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.18.0",
+    "lucide-react": "^0.469.0",
+    "next-themes": "^0.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.0",
+    "sonner": "^1.7.0",
+    "tailwind-merge": "^2.5.0"
   },
   "private": true
 }

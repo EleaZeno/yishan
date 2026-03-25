@@ -1,16 +1,22 @@
+﻿@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  font-family: 'Inter', 'Noto Sans SC', sans-serif;
-  background-color: #fcfdfe;
-  overflow: hidden;
+@theme {
+  --color-primary: #6366f1;
+  --color-primary-foreground: #ffffff;
+  --color-background: #fcfdfe;
+  --color-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-border: #e2e8f0;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-accent: #f1f5f9;
+  --color-accent-foreground: #0f172a;
+  --color-destructive: #ef4444;
+  --color-secondary: #f1f5f9;
+  --radius: 0.5rem;
 }
 
-* {
-  box-sizing: border-box;
-}
-
+html, body, #root { margin: 0; padding: 0; width: 100%; height: 100%; font-family: Inter, sans-serif; background-color: #fcfdfe; }
+* { box-sizing: border-box; }

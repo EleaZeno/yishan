@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool } from 'lucide-react';
+import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import { User } from '../types';
 import { Button } from './ui/button';
@@ -23,7 +23,7 @@ interface LayoutProps {
   onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAddClick, user, onLogout }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAddClick, onAdminClick, user, onLogout }) => {
   
   const navItems = [
     { id: 'dashboard', label: '核心', icon: BarChart3 },
@@ -57,6 +57,16 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
             >
                 <PlusCircle size={16} />
                 <span className="text-sm">注入信号</span>
+            </Button>
+
+            <Button 
+                onClick={() => onTabChange('admin')}
+                variant="ghost"
+                size="icon"
+                className="rounded-xl w-10 h-10 text-muted-foreground hover:text-foreground"
+                title="后台管理"
+            >
+                <Settings size={18} />
             </Button>
 
             <DropdownMenu>
