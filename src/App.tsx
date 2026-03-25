@@ -17,6 +17,7 @@ import { db } from './services/storage';
 import { authService } from './services/auth';
 import { getInitialWordState, predictRecallProbability } from './lib/algorithm';
 import { Loader2, Database, BookOpen, Brain, TrendingUp, RefreshCw, Download, Zap } from 'lucide-react';
+import { Button } from './components/ui/button';
 
 const AdminPanel = () => {
   const [total, setTotal] = useState(0);
