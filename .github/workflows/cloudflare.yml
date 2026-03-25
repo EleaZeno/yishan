@@ -9,23 +9,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run build
-
-      - name: Deploy to Cloudflare Pages (Direct Upload)
+      - run: npm install
+      - run: npm run build
+      - name: Deploy
         run: |
           npm install -g wrangler
-          CLOUDFLARE_API_KEY=${{ secrets.CLOUDFLARE_API_TOKEN }} CLOUDFLARE_EMAIL=${{ secrets.CLOUDFLARE_EMAIL }} wrangler pages deploy dist --project-name=yishan --commit-dirty=true
+          wrangler pages deploy dist --project-name=yishan --commit-dirty=true
+        env:
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
