@@ -12,6 +12,7 @@ import ReadingTest from './components/ReadingTest';
 import ListeningTest from './components/ListeningTest';
 import WritingTest from './components/WritingTest';
 import Practice from './components/Practice';
+import AnalyticsPage from './components/AnalyticsPage';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
@@ -317,6 +318,7 @@ const App: React.FC = () => {
     activeTab === 'diagnose' && activeTest === 'listening' && React.createElement(ListeningTest, { userId: user?.id, onBack: () => setActiveTest(null) }),
     activeTab === 'diagnose' && activeTest === 'writing' && React.createElement(WritingTest, { userId: user?.id, onBack: () => setActiveTest(null) }),
     activeTab === 'practice' && React.createElement(Practice, { userId: user?.id, onBack: () => setActiveTab('diagnose') }),
+    activeTab === 'analytics' && React.createElement(AnalyticsPage),
     activeTab === 'admin' && React.createElement(AdminPanel),
     React.createElement(AddWordModal, { isOpen: isAddModalOpen, onClose: () => setIsAddModalOpen(false), onSave: handleAddWord }),
   );
