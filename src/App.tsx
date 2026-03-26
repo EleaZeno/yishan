@@ -16,6 +16,11 @@ import AnalyticsPage from './components/AnalyticsPage';
 import StudyPlanGenerator from './components/StudyPlanGenerator';
 import AchievementSystem from './components/AchievementSystem';
 import ReminderSystem from './components/ReminderSystem';
+import CloudBackupSystem from './components/CloudBackupSystem';
+import LearningHistoryTracker from './components/LearningHistoryTracker';
+import PrivacySettings from './components/PrivacySettings';
+import AchievementSharing from './components/AchievementSharing';
+import VocabularySharingAndCommunity from './components/VocabularySharingAndCommunity';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
@@ -325,6 +330,11 @@ const App: React.FC = () => {
     activeTab === 'plans' && React.createElement(StudyPlanGenerator),
     activeTab === 'achievements' && React.createElement(AchievementSystem),
     activeTab === 'reminders' && React.createElement(ReminderSystem),
+    activeTab === 'backup' && React.createElement(CloudBackupSystem),
+    activeTab === 'history' && React.createElement(LearningHistoryTracker),
+    activeTab === 'privacy' && React.createElement(PrivacySettings),
+    activeTab === 'sharing' && React.createElement(AchievementSharing),
+    activeTab === 'community' && React.createElement(VocabularySharingAndCommunity),
     activeTab === 'admin' && React.createElement(AdminPanel),
     React.createElement(AddWordModal, { isOpen: isAddModalOpen, onClose: () => setIsAddModalOpen(false), onSave: handleAddWord }),
   );

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool, Settings, TrendingUp, Calendar, Trophy, Bell } from 'lucide-react';
+import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool, Settings, TrendingUp, Calendar, Trophy, Bell, Cloud, Share2, Lock } from 'lucide-react';
 import clsx from 'clsx';
 import { User } from '../types';
 import { Button } from './ui/button';
@@ -35,6 +35,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
     { id: 'plans', label: '计划', icon: Calendar },
     { id: 'achievements', label: '成就', icon: Trophy },
     { id: 'reminders', label: '提醒', icon: Bell },
+    { id: 'backup', label: '备份', icon: Cloud },
+    { id: 'history', label: '历史', icon: BookOpen },
+    { id: 'sharing', label: '分享', icon: Share2 },
+    { id: 'community', label: '社区', icon: TrendingUp },
+    { id: 'privacy', label: '隐私', icon: Lock },
   ];
 
   return (
