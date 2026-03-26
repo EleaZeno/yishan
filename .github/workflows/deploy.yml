@@ -1,0 +1,10 @@
+name: Deploy to Cloudflare Pages (disabled)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Use cloudflare.yml instead"
