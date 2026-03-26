@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool, Settings, TrendingUp } from 'lucide-react';
+import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool, Settings, TrendingUp, Calendar, Trophy, Bell } from 'lucide-react';
 import clsx from 'clsx';
 import { User } from '../types';
 import { Button } from './ui/button';
@@ -26,12 +26,15 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAddClick, onAdminClick, user, onLogout }) => {
   
   const navItems = [
-    { id: 'dashboard', label: '核心', icon: BarChart3 },
-    { id: 'study', label: '交互', icon: Brain },
+    { id: 'dashboard', label: '首页', icon: BarChart3 },
+    { id: 'study', label: '学习', icon: Brain },
     { id: 'library', label: '词库', icon: BookOpen },
     { id: 'diagnose', label: '诊断', icon: GraduationCap },
     { id: 'practice', label: '练习', icon: PenTool },
     { id: 'analytics', label: '分析', icon: TrendingUp },
+    { id: 'plans', label: '计划', icon: Calendar },
+    { id: 'achievements', label: '成就', icon: Trophy },
+    { id: 'reminders', label: '提醒', icon: Bell },
   ];
 
   return (
