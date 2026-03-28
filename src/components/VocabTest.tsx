@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { VOCAB_DATA } from '../data/vocab-data';
 import { X, Check, BrainCircuit, Trophy, ChevronRight, RefreshCw } from 'lucide-react';
 import { playSound } from '../lib/sound';
+import { assessVocabulary } from '../services/assessment';
 
 interface VocabTestProps {
-  onClose: () => void;
-  onFinish: (result: number) => void;
+  userId?: string;
+  onBack: () => void;
 }
 
-const VocabTest: React.FC<VocabTestProps> = ({ onClose, onFinish }) => {
+const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack }) => {
   const [step, setStep] = useState<'intro' | 'testing' | 'result'>('intro');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
@@ -67,7 +68,7 @@ const VocabTest: React.FC<VocabTestProps> = ({ onClose, onFinish }) => {
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center p-6 safe-top safe-bottom"
       >
-        <button onClick={onClose} className="absolute top-8 right-8 p-3 text-slate-400 hover:text-slate-900 transition-colors z-10">
+        <button onClick={onBack} className="absolute top-8 right-8 p-3 text-slate-400 hover:text-slate-900 transition-colors z-10">
           <X size={24} />
         </button>
 
@@ -160,9 +161,10 @@ const VocabTest: React.FC<VocabTestProps> = ({ onClose, onFinish }) => {
 
               <div className="space-y-3">
                  <button 
-                  onClick={() => {
-                    onFinish(calculatedVocab);
-                    onClose();
+                  onClick={async () => {
+                    const correctCount = Object.values(answers).filter(v => v).length;
+                    await assessVocabulary(correctCount, testSet.length, userId);
+                    onBack();
                   }}
                   className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all"
                 >

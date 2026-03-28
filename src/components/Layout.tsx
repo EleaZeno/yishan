@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool, Settings, TrendingUp, Calendar, Trophy, Bell, Cloud, Share2, Lock } from 'lucide-react';
+import { BookOpen, Brain, BarChart3, PlusCircle, User as UserIcon, LogOut, ShieldCheck, GraduationCap, PenTool, Settings, TrendingUp, Calendar, Trophy, Bell, Cloud, Share2, Lock, ChevronLeft } from 'lucide-react';
 import clsx from 'clsx';
 import { User } from '../types';
 import { Button } from './ui/button';
@@ -29,24 +29,21 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
     { id: 'dashboard', label: '首页', icon: BarChart3 },
     { id: 'study', label: '学习', icon: Brain },
     { id: 'library', label: '词库', icon: BookOpen },
-    { id: 'diagnose', label: '诊断', icon: GraduationCap },
-    { id: 'practice', label: '练习', icon: PenTool },
-    { id: 'analytics', label: '分析', icon: TrendingUp },
-    { id: 'plans', label: '计划', icon: Calendar },
-    { id: 'achievements', label: '成就', icon: Trophy },
-    { id: 'reminders', label: '提醒', icon: Bell },
-    { id: 'backup', label: '备份', icon: Cloud },
-    { id: 'history', label: '历史', icon: BookOpen },
-    { id: 'sharing', label: '分享', icon: Share2 },
-    { id: 'community', label: '社区', icon: TrendingUp },
-    { id: 'privacy', label: '隐私', icon: Lock },
+    { id: 'profile', label: '我的', icon: UserIcon },
   ];
+
+  const isMainTab = navItems.some(item => item.id === activeTab);
 
   return (
     <div className="flex flex-col h-full bg-background text-foreground overflow-hidden">
       {/* Header */}
       <header className="flex-none bg-background/80 backdrop-blur-xl border-b safe-top z-30 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
+            {!isMainTab && (
+              <Button variant="ghost" size="icon" onClick={() => onTabChange('profile')} className="mr-2 -ml-2 text-muted-foreground hover:text-foreground">
+                <ChevronLeft size={24} />
+              </Button>
+            )}
             <div className="w-10 h-10 bg-primary rounded-[14px] flex items-center justify-center text-primary-foreground font-black text-xl shadow-xl select-none">
                 Yi
             </div>
@@ -119,38 +116,59 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAdd
       </main>
 
       {/* Modern Bottom Navigation */}
-      <nav className="flex-none bg-background/80 backdrop-blur-2xl border-t safe-bottom z-30">
-        <div className="flex justify-around items-center h-20 max-w-lg mx-auto px-6">
-            {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                    <button
-                        key={item.id}
-                        onClick={() => onTabChange(item.id)}
-                        className={clsx(
-                            "flex flex-col items-center justify-center flex-1 h-full transition-all relative group",
-                            isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        {isActive && <div className="absolute -top-1 w-8 h-1 bg-primary rounded-full" />}
-                        <Icon size={22} strokeWidth={isActive ? 3 : 2} className={clsx("transition-transform group-active:scale-90", isActive && "scale-110")} />
-                        <span className="text-[9px] mt-2 font-black uppercase tracking-[0.15em]">{item.label}</span>
-                    </button>
-                );
-            })}
-            
-            <button
-                onClick={onAddClick}
-                className="flex flex-col items-center justify-center flex-1 h-full group"
-            >
-                <div className="bg-primary text-primary-foreground p-3.5 rounded-2xl shadow-2xl transform -translate-y-6 border-4 border-background active:scale-90 transition-all hover:opacity-90">
-                    <PlusCircle size={24} />
-                </div>
-                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em] -mt-5">注入</span>
-            </button>
-        </div>
-      </nav>
+      {isMainTab && (
+        <nav className="flex-none bg-background/80 backdrop-blur-2xl border-t safe-bottom z-30">
+          <div className="flex justify-around items-center h-20 max-w-lg mx-auto px-2 sm:px-6">
+              {navItems.slice(0, 2).map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                      <button
+                          key={item.id}
+                          onClick={() => onTabChange(item.id)}
+                          className={clsx(
+                              "flex flex-col items-center justify-center flex-1 h-full transition-all relative group",
+                              isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                          )}
+                      >
+                          {isActive && <div className="absolute -top-1 w-8 h-1 bg-primary rounded-full" />}
+                          <Icon size={22} strokeWidth={isActive ? 3 : 2} className={clsx("transition-transform group-active:scale-90", isActive && "scale-110")} />
+                          <span className="text-[9px] mt-2 font-black uppercase tracking-[0.15em]">{item.label}</span>
+                      </button>
+                  );
+              })}
+              
+              <button
+                  onClick={onAddClick}
+                  className="flex flex-col items-center justify-center flex-1 h-full group"
+              >
+                  <div className="bg-primary text-primary-foreground p-3.5 rounded-2xl shadow-2xl transform -translate-y-6 border-4 border-background active:scale-90 transition-all hover:opacity-90">
+                      <PlusCircle size={24} />
+                  </div>
+                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em] -mt-5">注入</span>
+              </button>
+
+              {navItems.slice(2).map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                      <button
+                          key={item.id}
+                          onClick={() => onTabChange(item.id)}
+                          className={clsx(
+                              "flex flex-col items-center justify-center flex-1 h-full transition-all relative group",
+                              isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                          )}
+                      >
+                          {isActive && <div className="absolute -top-1 w-8 h-1 bg-primary rounded-full" />}
+                          <Icon size={22} strokeWidth={isActive ? 3 : 2} className={clsx("transition-transform group-active:scale-90", isActive && "scale-110")} />
+                          <span className="text-[9px] mt-2 font-black uppercase tracking-[0.15em]">{item.label}</span>
+                      </button>
+                  );
+              })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 };

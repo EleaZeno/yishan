@@ -21,6 +21,7 @@ import LearningHistoryTracker from './components/LearningHistoryTracker';
 import PrivacySettings from './components/PrivacySettings';
 import AchievementSharing from './components/AchievementSharing';
 import VocabularySharingAndCommunity from './components/VocabularySharingAndCommunity';
+import Profile from './components/Profile';
 import { Word, Stats, User } from './types';
 import { db } from './services/storage';
 import { authService } from './services/auth';
@@ -30,162 +31,7 @@ import { Button } from './components/ui/button';
 import { getCoreVocabulary } from './data/vocabulary';
 import { initAudio } from './lib/sound';
 import { Toaster, toast } from 'sonner';
-
-const AdminPanel = () => {
-  const [total, setTotal] = useState(0);
-  const [mastered, setMastered] = useState(0);
-  const [learning, setLearning] = useState(0);
-  const [fresh, setFresh] = useState(0);
-  const [words, setWords] = useState<Word[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const all = await db.getAllWordsForStats();
-      setWords(all);
-      setTotal(all.length);
-      setMastered(all.filter(w => (w.halflife || 0) > 20160).length);
-      setLearning(all.filter(w => (w.halflife || 0) > 2880 && (w.halflife || 0) <= 20160).length);
-      setFresh(all.filter(w => (w.totalExposure || 0) === 0).length);
-    } catch (e) { console.error(e); }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">Admin Panel</h1>
-          <p className="text-sm text-muted-foreground mt-1">Connected to IndexedDB</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load}>
-            <RefreshCw size={14} className="mr-2" /> Refresh
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => {
-            const b = new Blob([JSON.stringify(words, null, 2)], { type: 'application/json' });
-            const u = URL.createObjectURL(b);
-            const a = document.createElement('a');
-            a.href = u; a.download = 'yishan-words.json'; a.click();
-            URL.revokeObjectURL(u);
-          }}>
-            <Download size={14} className="mr-2" /> Export
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-2xl p-4 border border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center">
-              <Database size={18} className="text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-black">{total}</p>
-              <p className="text-xs text-muted-foreground font-semibold">Total Words</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
-              <Brain size={18} className="text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-black">{mastered}</p>
-              <p className="text-xs text-muted-foreground font-semibold">Mastered</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center">
-              <TrendingUp size={18} className="text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-black">{learning}</p>
-              <p className="text-xs text-muted-foreground font-semibold">Learning</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center">
-              <Zap size={18} className="text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-black">{fresh}</p>
-              <p className="text-xs text-muted-foreground font-semibold">New Words</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-100">
-        <p className="text-sm font-black mb-3">Proficiency</p>
-        <div className="flex h-3 rounded-full overflow-hidden gap-0.5 mb-2">
-          {total > 0 && <div className="bg-slate-200 rounded-l-full" style={{ width: Math.max(2, fresh / total * 100) + '%' }} />}
-          {total > 0 && <div className="bg-amber-400" style={{ width: Math.max(2, learning / total * 100) + '%' }} />}
-          {total > 0 && <div className="bg-emerald-500 rounded-r-full" style={{ width: Math.max(2, mastered / total * 100) + '%' }} />}
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground font-medium">
-          <span>New Words {fresh}</span>
-          <span>Learning {learning}</span>
-          <span>Mastered {mastered}</span>
-        </div>
-      </div>
-
-      {/* Word list */}
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-          <p className="text-sm font-black">
-            <BookOpen size={14} className="inline mr-2" />
-            Word List
-          </p>
-          <span className="text-xs text-muted-foreground">{words.length} words</span>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="animate-spin text-muted-foreground" size={24} />
-          </div>
-        ) : words.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="font-medium">No words yet，Import vocabulary first</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-50 max-h-96 overflow-y-auto">
-            {words.map((w, i) => (
-              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div>
-                  <p className="font-black text-sm">{w.term || '?'}</p>
-                  <p className="text-xs text-muted-foreground truncate max-w-xs">{(w.definition || '').substring(0, 40)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-1 rounded-lg font-bold ${
-                    (w.totalExposure || 0) === 0 ? 'bg-slate-200 text-slate-600' :
-                    (w.halflife || 0) > 20160 ? 'bg-emerald-100 text-emerald-700' :
-                    'bg-amber-100 text-amber-700'
-                  }`}>
-                    Lv.{w.totalExposure || 0}
-                  </span>
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {Math.round((w.halflife || 1440) / 60)}h
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+import AdminDashboard from './components/AdminDashboard';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -366,7 +212,8 @@ const App: React.FC = () => {
       {activeTab === 'privacy' && <PrivacySettings />}
       {activeTab === 'sharing' && <AchievementSharing />}
       {activeTab === 'community' && <VocabularySharingAndCommunity />}
-      {activeTab === 'admin' && <AdminPanel />}
+      {activeTab === 'admin' && <AdminDashboard />}
+      {activeTab === 'profile' && <Profile user={user} onNavigate={setActiveTab} onLogout={handleLogout} />}
       <AddWordModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSave={handleAddWord} />
       <Toaster />
     </Layout>
