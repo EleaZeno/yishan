@@ -79,44 +79,44 @@ const Flashcard: React.FC<FlashcardProps> = React.memo(({ word, onSwipe, isFront
   };
 
   const frontFace = (
-    <div className="absolute inset-0 w-full h-full bg-white rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center p-8 backface-hidden border border-slate-100 will-change-transform">
-         <div className="absolute -top-12 -right-12 w-64 h-64 bg-indigo-50/40 rounded-full blur-3xl pointer-events-none" />
+    <div className="absolute inset-0 w-full h-full bg-card rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex flex-col items-center justify-center p-8 backface-hidden border border-border will-change-transform">
+         <div className="absolute -top-12 -right-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
          
          <div className="flex-1 flex flex-col items-center justify-center w-full z-10">
-            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full mb-12 tracking-[0.25em] uppercase">
-                <Sparkles size={12} className="fill-indigo-600" />
+            <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary text-[10px] font-black rounded-full mb-12 tracking-[0.25em] uppercase">
+                <Sparkles size={12} className="fill-primary" />
                 Cognitive Node
             </div>
-            <h2 className="text-5xl md:text-7xl font-black text-slate-900 text-center tracking-tighter leading-tight break-words max-w-full">
+            <h2 className="text-5xl md:text-7xl font-black text-card-foreground text-center tracking-tighter leading-tight break-words max-w-full">
                 {word.term}
             </h2>
-            {word.phonetic && <p className="mt-6 text-slate-400 font-semibold text-xl font-mono">{word.phonetic}</p>}
+            {word.phonetic && <p className="mt-6 text-muted-foreground font-semibold text-xl font-mono">{word.phonetic}</p>}
             
             <button 
               onClick={handlePlayAudio} 
-              className="mt-14 w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all active:scale-90 border border-slate-100 shadow-sm"
+              className="mt-14 w-16 h-16 bg-secondary text-secondary-foreground rounded-2xl flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all active:scale-90 border border-border shadow-sm"
             >
                 <Volume2 size={28} />
             </button>
          </div>
          <div className="mt-auto py-6">
-             <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] animate-pulse">Tap to Inspect</p>
+             <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.4em] animate-pulse">Tap to Inspect</p>
          </div>
     </div>
   );
 
   const backFace = (
-    <div className="absolute inset-0 w-full h-full bg-slate-900 rounded-[2.5rem] shadow-2xl flex flex-col p-10 backface-hidden rotate-y-180 border border-slate-800 overflow-hidden will-change-transform">
+    <div className="absolute inset-0 w-full h-full bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] shadow-2xl flex flex-col p-10 backface-hidden rotate-y-180 border border-slate-800 overflow-hidden will-change-transform">
         <div className="flex justify-between items-center mb-8 border-b border-slate-800/50 pb-6">
             <h3 className="text-2xl font-black text-white tracking-tight truncate">{word.term}</h3>
-            <button onClick={handlePlayAudio} className="p-3 bg-slate-800 rounded-2xl text-slate-400 hover:text-indigo-400 active:scale-90 transition-colors">
+            <button onClick={handlePlayAudio} className="p-3 bg-slate-800 rounded-2xl text-slate-400 hover:text-primary active:scale-90 transition-colors">
               <Volume2 size={20} />
             </button>
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar space-y-10">
             <div className="space-y-4">
-               <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.3em]">Definition</p>
+               <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em]">Definition</p>
                <p className="text-3xl text-slate-100 font-bold leading-tight">
                   {word.definition}
                </p>
@@ -140,7 +140,7 @@ const Flashcard: React.FC<FlashcardProps> = React.memo(({ word, onSwipe, isFront
 
   if (!isFront) {
       return (
-        <div className="absolute top-0 left-0 w-full h-full bg-white rounded-[2.5rem] shadow-sm border border-slate-50 transform scale-[0.96] translate-y-4 -z-10 opacity-30 will-change-transform" />
+        <div className="absolute top-0 left-0 w-full h-full bg-card rounded-[2.5rem] shadow-sm border border-border transform scale-[0.96] translate-y-4 -z-10 opacity-30 will-change-transform" />
       );
   }
 

@@ -113,25 +113,25 @@ export default function CloudBackupSystem() {
       </div>
 
       {/* Settings */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3">
+      <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold">自动备份</p>
+            <p className="font-bold text-foreground">自动备份</p>
             <p className="text-xs text-muted-foreground">每天自动备份数据</p>
           </div>
           <button
             onClick={() => setAutoBackup(!autoBackup)}
-            className={`w-12 h-6 rounded-full transition-colors ${autoBackup ? 'bg-indigo-500' : 'bg-slate-300'}`}
+            className={`w-12 h-6 rounded-full transition-colors ${autoBackup ? 'bg-primary' : 'bg-muted'}`}
           />
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold">加密备份</p>
+            <p className="font-bold text-foreground">加密备份</p>
             <p className="text-xs text-muted-foreground">使用 Base64 加密保护数据</p>
           </div>
           <button
             onClick={() => setEncryptBackup(!encryptBackup)}
-            className={`w-12 h-6 rounded-full transition-colors ${encryptBackup ? 'bg-indigo-500' : 'bg-slate-300'}`}
+            className={`w-12 h-6 rounded-full transition-colors ${encryptBackup ? 'bg-primary' : 'bg-muted'}`}
           />
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function CloudBackupSystem() {
       <button
         onClick={createBackup}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-2xl p-4 font-bold hover:shadow-lg transition-all disabled:opacity-50"
+        className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-2xl p-4 font-bold hover:shadow-lg transition-all disabled:opacity-50"
       >
         {loading ? '备份中...' : '+ 创建备份'}
       </button>
@@ -148,15 +148,15 @@ export default function CloudBackupSystem() {
       {/* Backups List */}
       <div className="space-y-3">
         {backups.map((backup, i) => (
-          <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200">
+          <div key={i} className="bg-card rounded-2xl p-4 border border-border">
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="font-bold">{backup.name}</p>
+                <p className="font-bold text-foreground">{backup.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(backup.timestamp).toLocaleString()}
                 </p>
               </div>
-              <span className="text-xs px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 font-bold">
+              <span className="text-xs px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 font-bold">
                 {backup.status === 'synced' ? '已同步' : backup.status === 'cloud' ? '云端' : '本地'}
               </span>
             </div>
@@ -166,13 +166,13 @@ export default function CloudBackupSystem() {
             <div className="flex gap-2">
               <button
                 onClick={() => restoreBackup(backup)}
-                className="flex-1 bg-indigo-100 text-indigo-700 rounded-lg py-2 font-bold hover:bg-indigo-200 transition-colors"
+                className="flex-1 bg-primary/10 text-primary rounded-lg py-2 font-bold hover:bg-primary/20 transition-colors"
               >
                 恢复
               </button>
               <button
                 onClick={() => deleteBackup(backup.id)}
-                className="flex-1 bg-red-100 text-red-700 rounded-lg py-2 font-bold hover:bg-red-200 transition-colors"
+                className="flex-1 bg-destructive/10 text-destructive rounded-lg py-2 font-bold hover:bg-destructive/20 transition-colors"
               >
                 删除
               </button>

@@ -128,8 +128,8 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-                <Brain className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center">
+                <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <h4 className="font-semibold text-foreground">词汇量测试</h4>
@@ -146,8 +146,8 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Target className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
+                <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
                 <h4 className="font-semibold text-foreground">语法诊断</h4>
@@ -164,8 +164,8 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                <Zap className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
                 <h4 className="font-semibold text-foreground">阅读理解</h4>
@@ -182,8 +182,8 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
-                <Headphones className="w-6 h-6 text-yellow-600" />
+              <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-500/20 flex items-center justify-center">
+                <Headphones className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
                 <h4 className="font-semibold text-foreground">听力理解</h4>
@@ -200,8 +200,8 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
-                <PenTool className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
+                <PenTool className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <div>
                 <h4 className="font-semibold text-foreground">写作基础</h4>
@@ -218,8 +218,8 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         >
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-orange-600" />
+              <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
                 <h4 className="font-semibold text-foreground">薄弱点攻关</h4>
@@ -232,25 +232,25 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
       </div>
 
       {/* 学习建议 */}
-      <Card className="bg-amber-50/50 border-amber-200/50">
+      <Card className="bg-amber-50/50 dark:bg-amber-500/10 border-amber-200/50 dark:border-amber-500/20">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold text-amber-900 flex items-center gap-2">
+          <CardTitle className="text-lg font-semibold text-amber-900 dark:text-amber-500 flex items-center gap-2">
             <span>📝</span> 学习建议
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-              <span className="text-amber-900/80">词汇量是英语学习的基础，建议每天背诵20个新单词</span>
+              <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+              <span className="text-amber-900/80 dark:text-amber-500/80">词汇量是英语学习的基础，建议每天背诵20个新单词</span>
             </li>
             <li className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-              <span className="text-amber-900/80">语法较弱，建议系统学习从句和非谓语动词</span>
+              <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+              <span className="text-amber-900/80 dark:text-amber-500/80">语法较弱，建议系统学习从句和非谓语动词</span>
             </li>
             <li className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-              <span className="text-amber-900/80">阅读理解需要多读英文文章，练习定位细节和推理判断</span>
+              <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+              <span className="text-amber-900/80 dark:text-amber-500/80">阅读理解需要多读英文文章，练习定位细节和推理判断</span>
             </li>
           </ul>
         </CardContent>

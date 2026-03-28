@@ -122,10 +122,10 @@ export default function AchievementSystem() {
   const totalCount = achievements.length;
 
   const rarityColors = {
-    common: 'bg-slate-100 text-slate-700 border-slate-300',
-    rare: 'bg-blue-100 text-blue-700 border-blue-300',
-    epic: 'bg-purple-100 text-purple-700 border-purple-300',
-    legendary: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+    common: 'bg-muted text-foreground border-border',
+    rare: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+    epic: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+    legendary: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
   };
 
   return (
@@ -137,14 +137,14 @@ export default function AchievementSystem() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200">
-        <div className="w-full h-4 bg-slate-200 rounded-full overflow-hidden">
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <div className="w-full h-4 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+            className="h-full bg-gradient-to-r from-primary to-purple-500 transition-all"
             style={{ width: `${(unlockedCount / totalCount) * 100}%` }}
           />
         </div>
-        <p className="text-sm font-bold mt-2">{Math.round((unlockedCount / totalCount) * 100)}% 完成度</p>
+        <p className="text-sm font-bold mt-2 text-foreground">{Math.round((unlockedCount / totalCount) * 100)}% 完成度</p>
       </div>
 
       {/* Achievements Grid */}
@@ -155,10 +155,10 @@ export default function AchievementSystem() {
             className={`rounded-2xl p-4 border-2 transition-all ${
               achievement.unlocked
                 ? rarityColors[achievement.rarity]
-                : 'bg-slate-50 text-slate-400 border-slate-200'
+                : 'bg-card text-muted-foreground border-border opacity-50'
             }`}
           >
-            <div className="text-center mb-2">{achievement.icon}</div>
+            <div className="text-center mb-2 flex justify-center">{achievement.icon}</div>
             <p className="font-bold text-sm text-center">{achievement.name}</p>
             <p className="text-xs text-center opacity-75 mt-1">{achievement.description}</p>
             {achievement.unlocked && (
@@ -172,21 +172,21 @@ export default function AchievementSystem() {
 
       {/* Stats */}
       {stats && (
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-card rounded-2xl p-4 border border-border grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="text-center">
-            <p className="text-2xl font-black">{stats.total}</p>
+            <p className="text-2xl font-black text-foreground">{stats.total}</p>
             <p className="text-xs text-muted-foreground">总词数</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-black text-emerald-600">{stats.mastered}</p>
+            <p className="text-2xl font-black text-emerald-500">{stats.mastered}</p>
             <p className="text-xs text-muted-foreground">已掌握</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-black text-amber-600">{stats.learning}</p>
+            <p className="text-2xl font-black text-amber-500">{stats.learning}</p>
             <p className="text-xs text-muted-foreground">学习中</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-black text-indigo-600">{stats.avgExposure}</p>
+            <p className="text-2xl font-black text-primary">{stats.avgExposure}</p>
             <p className="text-xs text-muted-foreground">平均复习</p>
           </div>
         </div>

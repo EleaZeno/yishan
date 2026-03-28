@@ -84,12 +84,12 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
   return (
     <div className="space-y-4 h-full flex flex-col">
         {/* Tabs */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full max-w-xs mx-auto mb-2">
+        <div className="flex bg-muted p-1.5 rounded-2xl w-full max-w-xs mx-auto mb-2">
             <button 
                 onClick={() => setActiveSubTab('my')}
                 className={clsx(
                     "flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
-                    activeSubTab === 'my' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                    activeSubTab === 'my' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
             >
                 我的信号
@@ -98,7 +98,7 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
                 onClick={() => setActiveSubTab('market')}
                 className={clsx(
                     "flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-1",
-                    activeSubTab === 'market' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                    activeSubTab === 'market' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
                 )}
             >
                 信号市场 <Zap size={10} className="fill-current"/>
@@ -109,20 +109,20 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
             <>
                 <div className="flex gap-2">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-3 text-slate-400" size={20} />
+                        <Search className="absolute left-3 top-3 text-muted-foreground" size={20} />
                         <input 
                             type="text" 
                             placeholder="搜索信号库..." 
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition-all"
+                            className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none shadow-sm transition-all text-foreground placeholder:text-muted-foreground"
                         />
                     </div>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto space-y-3 pb-24 no-scrollbar">
                     {filteredWords.length === 0 && !loading ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-slate-300">
+                        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                             <Search size={48} strokeWidth={1} className="mb-4 opacity-20" />
                             <p className="text-sm font-bold uppercase tracking-[0.2em]">No Signals Detected</p>
                         </div>
@@ -133,21 +133,21 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
                                 <div 
                                     key={word.id} 
                                     ref={isLast ? lastWordElementRef : null}
-                                    className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex justify-between items-center hover:shadow-md hover:border-indigo-100 transition-all group"
+                                    className="bg-card p-5 rounded-[1.5rem] border border-border shadow-sm flex justify-between items-center hover:shadow-md hover:border-primary/50 transition-all group"
                                 >
                                     <div className="flex-1 min-w-0 pr-4">
                                         <div className="flex items-center gap-3 mb-1">
-                                            <h4 className="font-black text-slate-900 text-xl tracking-tight truncate">{word.term}</h4>
-                                            {word.phonetic && <span className="text-xs text-slate-400 font-medium font-mono">[{word.phonetic.replace(/\//g, '')}]</span>}
+                                            <h4 className="font-black text-foreground text-xl tracking-tight truncate">{word.term}</h4>
+                                            {word.phonetic && <span className="text-xs text-muted-foreground font-medium font-mono">[{word.phonetic.replace(/\//g, '')}]</span>}
                                         </div>
-                                        <p className="text-sm text-slate-500 font-medium truncate leading-relaxed">{word.definition}</p>
+                                        <p className="text-sm text-muted-foreground font-medium truncate leading-relaxed">{word.definition}</p>
                                     </div>
                                     <div className="flex flex-col items-end gap-3 flex-none">
                                         <div className={clsx(
                                             "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border",
-                                            word.halflife > 20160 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                                            word.halflife > 4320 ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 
-                                            'bg-amber-50 text-amber-600 border-amber-100'
+                                            word.halflife > 20160 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
+                                            word.halflife > 4320 ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' : 
+                                            'bg-amber-500/10 text-amber-500 border-amber-500/20'
                                         )}>
                                             {word.halflife > 20160 ? 'Deep' : word.halflife > 4320 ? 'Stable' : 'Fading'}
                                         </div>
@@ -157,7 +157,7 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
                                                 onDelete(word.id);
                                                 setWords(prev => prev.filter(w => w.id !== word.id));
                                             }}
-                                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -166,37 +166,37 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
                             );
                         })
                     )}
-                    {loading && <div className="flex justify-center py-8"><Loader2 className="animate-spin text-indigo-400" size={24} /></div>}
+                    {loading && <div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary" size={24} /></div>}
                 </div>
             </>
         ) : (
             <div className="flex-1 overflow-y-auto space-y-4 pb-24 no-scrollbar">
-                <div className="bg-indigo-600 p-8 rounded-[2.5rem] text-white relative overflow-hidden mb-6">
+                <div className="bg-primary p-8 rounded-[2.5rem] text-primary-foreground relative overflow-hidden mb-6">
                     <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12"><Zap size={160} /></div>
                     <h3 className="text-2xl font-black mb-2 tracking-tight">发现专业级信号流</h3>
-                    <p className="text-indigo-100 text-xs font-medium max-w-xs leading-relaxed opacity-80">
+                    <p className="text-primary-foreground/80 text-xs font-medium max-w-xs leading-relaxed">
                         订阅 Pro 版可解锁所有词库。针对不同场景优化的贝叶斯训练模型。
                     </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {marketPacks.map(pack => (
-                        <div key={pack.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
+                        <div key={pack.id} className="bg-card p-6 rounded-3xl border border-border shadow-sm hover:shadow-md transition-all group flex flex-col h-full">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex flex-wrap gap-2">
-                                    {pack.tags.map(t => <span key={t} className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-slate-50 text-slate-400 rounded-md border border-slate-100">{t}</span>)}
+                                    {pack.tags.map(t => <span key={t} className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-muted text-muted-foreground rounded-md border border-border">{t}</span>)}
                                 </div>
-                                {pack.premium && <Crown size={16} className="text-amber-400" />}
+                                {pack.premium && <Crown size={16} className="text-amber-500" />}
                             </div>
-                            <h4 className="text-lg font-black text-slate-900 mb-1 leading-tight">{pack.name}</h4>
-                            <p className="text-slate-400 text-xs font-bold mb-6">{pack.count} 个认知信号节点</p>
+                            <h4 className="text-lg font-black text-foreground mb-1 leading-tight">{pack.name}</h4>
+                            <p className="text-muted-foreground text-xs font-bold mb-6">{pack.count} 个认知信号节点</p>
                             
                             <button 
                                 onClick={onImportCore}
                                 disabled={isImporting}
                                 className={clsx(
                                     "mt-auto w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2",
-                                    pack.premium && !user?.isPro ? "bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100" : "bg-slate-900 text-white hover:bg-indigo-600"
+                                    pack.premium && !user?.isPro ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20" : "bg-primary text-primary-foreground hover:bg-primary/90"
                                 )}
                             >
                                 {isImporting ? <Loader2 size={14} className="animate-spin"/> : <BookDown size={14} />}

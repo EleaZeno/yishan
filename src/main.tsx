@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 import { toast } from 'sonner';
+import { ThemeProvider } from 'next-themes';
 
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -21,6 +22,8 @@ const updateSW = registerSW({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <App />
+    </ThemeProvider>
   </StrictMode>,
 );

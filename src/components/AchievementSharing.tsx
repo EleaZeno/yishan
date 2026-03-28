@@ -116,8 +116,8 @@ export default function AchievementSharing() {
       {/* Share Modal */}
       {selectedCard && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-            <p className="text-lg font-black mb-4">分享到</p>
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full mx-4">
+            <p className="text-lg font-black text-foreground mb-4">分享到</p>
             <div className="space-y-2 mb-4">
               <button className="w-full bg-emerald-500 text-white rounded-lg py-2 font-bold hover:bg-emerald-600">微信</button>
               <button className="w-full bg-blue-500 text-white rounded-lg py-2 font-bold hover:bg-blue-600">QQ</button>
@@ -126,7 +126,7 @@ export default function AchievementSharing() {
             </div>
             <button
               onClick={() => setSelectedCard(null)}
-              className="w-full bg-slate-200 text-slate-700 rounded-lg py-2 font-bold hover:bg-slate-300"
+              className="w-full bg-muted text-muted-foreground rounded-lg py-2 font-bold hover:bg-muted/80"
             >
               关闭
             </button>
@@ -135,23 +135,23 @@ export default function AchievementSharing() {
       )}
 
       {/* Leaderboard Preview */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200">
-        <p className="font-bold text-lg mb-3">🏅 排行榜预览</p>
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <p className="font-bold text-foreground text-lg mb-3">🏅 排行榜预览</p>
         <div className="space-y-2">
-          <div className="flex items-center justify-between p-2 bg-yellow-50 rounded-lg">
-            <span className="font-black text-yellow-600">🥇 1</span>
-            <span className="font-bold">学习大师</span>
-            <span className="font-black text-yellow-600">9500</span>
+          <div className="flex items-center justify-between p-2 bg-yellow-500/10 rounded-lg">
+            <span className="font-black text-yellow-500">🥇 1</span>
+            <span className="font-bold text-foreground">学习大师</span>
+            <span className="font-black text-yellow-500">9500</span>
           </div>
-          <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
-            <span className="font-black text-slate-600">🥈 2</span>
-            <span className="font-bold">你</span>
-            <span className="font-black text-slate-600">8200</span>
+          <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+            <span className="font-black text-muted-foreground">🥈 2</span>
+            <span className="font-bold text-foreground">你</span>
+            <span className="font-black text-muted-foreground">8200</span>
           </div>
-          <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
-            <span className="font-black text-orange-600">🥉 3</span>
-            <span className="font-bold">学习者</span>
-            <span className="font-black text-orange-600">7800</span>
+          <div className="flex items-center justify-between p-2 bg-orange-500/10 rounded-lg">
+            <span className="font-black text-orange-500">🥉 3</span>
+            <span className="font-bold text-foreground">学习者</span>
+            <span className="font-black text-orange-500">7800</span>
           </div>
         </div>
       </div>

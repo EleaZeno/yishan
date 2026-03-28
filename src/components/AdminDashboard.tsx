@@ -130,12 +130,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Progress Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200">
-        <p className="text-sm font-bold mb-3">熟练度分布</p>
-        <div className="flex h-4 rounded-full overflow-hidden gap-1 bg-slate-100">
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <p className="text-sm font-bold mb-3 text-foreground">熟练度分布</p>
+        <div className="flex h-4 rounded-full overflow-hidden gap-1 bg-muted">
           {total > 0 && (
             <div
-              className="bg-slate-300 rounded-l-full transition-all"
+              className="bg-muted-foreground/30 rounded-l-full transition-all"
               style={{ width: `${Math.max(2, (fresh / total) * 100)}%` }}
             />
           )}
@@ -160,19 +160,19 @@ export default function AdminDashboard() {
       </div>
 
       {/* Search & Filter */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3">
+      <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
         <div className="flex gap-2">
           <input
             type="text"
             placeholder="搜索词汇..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
           />
           <select
             value={filterLevel}
             onChange={(e) => setFilterLevel(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="all">全部</option>
             <option value="fresh">新词</option>
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="recent">最新</option>
             <option value="term">字母序</option>
@@ -192,9 +192,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Word List */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-          <p className="text-sm font-bold">📚 词库列表 ({filteredWords.length}/{total})</p>
+      <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <div className="px-4 py-3 bg-muted/50 border-b border-border flex justify-between items-center">
+          <p className="text-sm font-bold text-foreground">📚 词库列表 ({filteredWords.length}/{total})</p>
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -205,24 +205,24 @@ export default function AdminDashboard() {
             <p className="font-medium">暂无词汇</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+          <div className="divide-y divide-border max-h-96 overflow-y-auto">
             {filteredWords.slice(0, 50).map((w, i) => (
-              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+              <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
                 <div className="flex-1">
-                  <p className="font-bold text-sm">{w.term || '?'}</p>
+                  <p className="font-bold text-sm text-foreground">{w.term || '?'}</p>
                   <p className="text-xs text-muted-foreground truncate max-w-xs">{(w.definition || '').substring(0, 50)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs px-2 py-1 rounded-lg font-bold ${
-                    (w.totalExposure || 0) === 0 ? 'bg-slate-200 text-slate-600' :
-                    (w.halflife || 0) > 20160 ? 'bg-emerald-100 text-emerald-700' :
-                    'bg-amber-100 text-amber-700'
+                    (w.totalExposure || 0) === 0 ? 'bg-muted text-muted-foreground' :
+                    (w.halflife || 0) > 20160 ? 'bg-emerald-500/10 text-emerald-500' :
+                    'bg-amber-500/10 text-amber-500'
                   }`}>
                     Lv.{w.totalExposure || 0}
                   </span>
                   <button
                     onClick={() => deleteWord(w.id)}
-                    className="p-1 hover:bg-red-100 rounded text-red-600 transition-colors"
+                    className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>

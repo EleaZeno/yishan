@@ -127,22 +127,22 @@ export default function AnalyticsPage() {
       {/* Charts */}
       <div className="grid md:grid-cols-2 gap-4">
         {/* Line Chart */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200">
-          <p className="text-sm font-bold mb-3">📅 最近30天新增</p>
+        <div className="bg-card rounded-2xl p-4 border border-border">
+          <p className="text-sm font-bold mb-3 text-foreground">📅 最近30天新增</p>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.dateData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="date" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
               <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Pie Chart */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200">
-          <p className="text-sm font-bold mb-3">🎯 熟练度分布</p>
+        <div className="bg-card rounded-2xl p-4 border border-border">
+          <p className="text-sm font-bold mb-3 text-foreground">🎯 熟练度分布</p>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -152,27 +152,27 @@ export default function AnalyticsPage() {
                 cx="50%"
                 cy="50%"
                 outerRadius={80}
-                label
+                label={{ fill: 'hsl(var(--foreground))' }}
               >
                 {data.levels.map((entry: any, index: number) => (
                   <Cell key={index} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
-              <Legend />
+              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
+              <Legend wrapperStyle={{ color: 'hsl(var(--foreground))' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Bar Chart */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 md:col-span-2">
-          <p className="text-sm font-bold mb-3">🏷️ 标签分布 (Top 10)</p>
+        <div className="bg-card rounded-2xl p-4 border border-border md:col-span-2">
+          <p className="text-sm font-bold mb-3 text-foreground">🏷️ 标签分布 (Top 10)</p>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.tagData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="tag" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="tag" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }} />
               <Bar dataKey="count" fill="#4f46e5" />
             </BarChart>
           </ResponsiveContainer>

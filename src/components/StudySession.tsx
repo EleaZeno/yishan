@@ -133,11 +133,11 @@ const StudySession: React.FC<StudySessionProps> = ({
   if (isFinished) {
     return (
         <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-in fade-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-8 text-indigo-600">
+            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-8 text-primary">
                 <PartyPopper size={48} />
             </div>
-            <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">交互圆满</h2>
-            <p className="text-slate-400 mb-12 max-w-xs mx-auto text-sm font-semibold leading-relaxed">
+            <h2 className="text-4xl font-black text-foreground mb-4 tracking-tighter">交互圆满</h2>
+            <p className="text-muted-foreground mb-12 max-w-xs mx-auto text-sm font-semibold leading-relaxed">
                 所有认知连接已在当前周期内完成对齐。
             </p>
             <Button 
@@ -153,11 +153,11 @@ const StudySession: React.FC<StudySessionProps> = ({
   if (sessionWords.length === 0) {
     return (
          <div className="flex flex-col items-center justify-center h-full text-center p-6">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300">
+            <div className="w-24 h-24 bg-secondary rounded-full flex items-center justify-center mb-6 text-muted-foreground/50">
                 <Search size={40} />
             </div>
-            <h2 className="text-2xl font-black text-slate-900">暂无待校准信号</h2>
-            <p className="text-slate-400 text-sm mt-3 font-medium">目前的记忆稳定性均处于高阈值区间。</p>
+            <h2 className="text-2xl font-black text-foreground">暂无待校准信号</h2>
+            <p className="text-muted-foreground text-sm mt-3 font-medium">目前的记忆稳定性均处于高阈值区间。</p>
             <div className="flex flex-col gap-4 mt-12 w-full max-w-xs">
                  <Button 
                     onClick={onAddWord}
@@ -223,13 +223,13 @@ const StudySession: React.FC<StudySessionProps> = ({
          
          {/* 操作辅助 */}
          <div className="flex-none mt-14 flex justify-center gap-10">
-            <div className="flex items-center gap-2.5 px-5 py-2.5 bg-white border border-slate-100 rounded-full shadow-sm">
+            <div className="flex items-center gap-2.5 px-5 py-2.5 bg-card border border-border rounded-full shadow-sm">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">向左: 已掌握</span>
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">向左: 已掌握</span>
             </div>
-            <div className="flex items-center gap-2.5 px-5 py-2.5 bg-white border border-slate-100 rounded-full shadow-sm">
+            <div className="flex items-center gap-2.5 px-5 py-2.5 bg-card border border-border rounded-full shadow-sm">
                 <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">向右: 需复习</span>
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">向右: 需复习</span>
             </div>
          </div>
     </div>

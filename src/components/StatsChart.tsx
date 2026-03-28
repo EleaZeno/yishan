@@ -34,8 +34,8 @@ const StatsChart: React.FC<StatsChartProps> = ({ words }) => {
   return (
     <Card className="shadow-sm h-80 w-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-black text-slate-800 tracking-tight">贝叶斯记忆层级</CardTitle>
-        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Confidence Interval Matrix</span>
+        <CardTitle className="text-lg font-black text-foreground tracking-tight">贝叶斯记忆层级</CardTitle>
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Confidence Interval Matrix</span>
       </CardHeader>
       <CardContent className="h-[calc(100%-5rem)]">
         <ResponsiveContainer width="100%" height="100%">
@@ -44,12 +44,13 @@ const StatsChart: React.FC<StatsChartProps> = ({ words }) => {
               dataKey="name" 
               axisLine={false} 
               tickLine={false} 
-              tick={{fontSize: 11, fill: '#94a3b8', fontWeight: 800}} 
+              tick={{fontSize: 11, fill: 'currentColor', fontWeight: 800}} 
+              className="text-muted-foreground"
             />
             <YAxis hide />
             <Tooltip 
-              cursor={{fill: '#f8fafc'}}
-              contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)', padding: '12px'}}
+              cursor={{fill: 'var(--muted)'}}
+              contentStyle={{borderRadius: '16px', border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--card-foreground)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)', padding: '12px'}}
             />
             <Bar dataKey="value" radius={[8, 8, 8, 8]} barSize={40}>
               {data.map((entry, index) => (

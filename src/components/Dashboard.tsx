@@ -2,9 +2,10 @@
 import React from 'react';
 import { Stats, Word } from '../types';
 import StatsChart from './StatsChart';
-import { WifiOff, Activity, ShieldCheck } from 'lucide-react';
+import { WifiOff, Activity, ShieldCheck, Flame, Target, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 interface DashboardProps {
   stats: Stats;
@@ -14,6 +15,12 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, onStartStudy }) => {
+  // Mock gamification data
+  const currentStreak = 12;
+  const dailyGoal = 50;
+  const dailyProgress = Math.min(stats.totalSignals, dailyGoal);
+  const progressPercent = (dailyProgress / dailyGoal) * 100;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
       {!isOnline && (
@@ -22,6 +29,26 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
               <span>本地暂存模式：交互数据将在连接建立后同步至云端。</span>
           </div>
       )}
+
+      {/* Gamification Header */}
+      <div className="flex items-center justify-between bg-card border rounded-3xl p-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-500">
+            <Flame size={24} className="fill-orange-500" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">当前连续学习</p>
+            <h2 className="text-2xl font-black text-foreground">{currentStreak} <span className="text-sm font-bold text-muted-foreground">天</span></h2>
+          </div>
+        </div>
+        <div className="flex-1 max-w-[200px] ml-8 hidden sm:block">
+          <div className="flex justify-between text-xs font-bold mb-2">
+            <span className="text-muted-foreground flex items-center gap-1"><Target size={12}/> 今日目标</span>
+            <span className="text-primary">{dailyProgress} / {dailyGoal}</span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-primary text-primary-foreground border-none shadow-lg relative overflow-hidden">
@@ -34,7 +61,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="shadow-sm bg-card">
           <CardHeader className="p-5 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">总词条负载</CardTitle>
           </CardHeader>
@@ -43,7 +70,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="shadow-sm bg-card">
           <CardHeader className="p-5 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">预测记忆留存</CardTitle>
           </CardHeader>
@@ -52,7 +79,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="shadow-sm bg-card">
           <CardHeader className="p-5 pb-2">
             <CardTitle className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">高稳定性占比</CardTitle>
           </CardHeader>
@@ -64,14 +91,15 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
 
       <StatsChart words={wordsForChart} />
 
-      <Card className="bg-slate-900 text-white border-slate-800 rounded-3xl overflow-hidden">
-        <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <Card className="bg-slate-900 dark:bg-slate-950 text-white border-slate-800 rounded-3xl overflow-hidden relative">
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+        <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/20">
-                  <Activity size={32} />
+              <div className="w-16 h-16 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/30 shadow-inner">
+                  <Zap size={32} className="fill-indigo-400" />
               </div>
               <div>
-                  <h3 className="text-xl font-black tracking-tight">贝叶斯自适应环境</h3>
+                  <h3 className="text-xl font-black tracking-tight text-white">贝叶斯自适应环境</h3>
                   <p className="text-slate-400 text-sm mt-2 leading-relaxed">
                       {stats.fadingSignals > 0 
                         ? `Flux-v5 引擎探测到 ${stats.fadingSignals} 个单词召回概率即将跌破 85% 阈值。` 
@@ -82,7 +110,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
           <Button 
               onClick={onStartStudy}
               size="lg"
-              className="px-10 py-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl transition-all shadow-xl shadow-indigo-900/20 active:scale-95 w-full md:w-auto text-lg"
+              className="px-10 py-6 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-95 w-full md:w-auto text-lg"
           >
               启动交互流
           </Button>

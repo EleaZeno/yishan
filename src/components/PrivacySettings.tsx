@@ -56,12 +56,12 @@ export default function PrivacySettings() {
       </div>
 
       {/* Privacy Notice */}
-      <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+      <div className="bg-blue-500/10 rounded-2xl p-4 border border-blue-500/20">
         <div className="flex items-start gap-2 mb-2">
-          <Shield size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+          <Shield size={20} className="text-blue-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-blue-900">你的数据安全</p>
-            <p className="text-sm text-blue-700 mt-1">
+            <p className="font-bold text-blue-400">你的数据安全</p>
+            <p className="text-sm text-blue-300 mt-1">
               所有数据存储在你的浏览器本地。我们不会收集、存储或分享你的个人学习数据。
             </p>
           </div>
@@ -69,75 +69,75 @@ export default function PrivacySettings() {
       </div>
 
       {/* Data Collection */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3">
-        <p className="font-bold text-lg">📊 数据收集</p>
+      <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
+        <p className="font-bold text-lg text-foreground">📊 数据收集</p>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold">分析追踪</p>
+            <p className="font-bold text-foreground">分析追踪</p>
             <p className="text-xs text-muted-foreground">允许收集使用统计数据</p>
           </div>
           <button
             onClick={() => toggleSetting('analyticsTracking')}
-            className={`w-12 h-6 rounded-full transition-colors ${settings.analyticsTracking ? 'bg-indigo-500' : 'bg-slate-300'}`}
+            className={`w-12 h-6 rounded-full transition-colors ${settings.analyticsTracking ? 'bg-primary' : 'bg-muted'}`}
           />
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold">数据收集</p>
+            <p className="font-bold text-foreground">数据收集</p>
             <p className="text-xs text-muted-foreground">允许收集应用使用数据</p>
           </div>
           <button
             onClick={() => toggleSetting('dataCollection')}
-            className={`w-12 h-6 rounded-full transition-colors ${settings.dataCollection ? 'bg-indigo-500' : 'bg-slate-300'}`}
+            className={`w-12 h-6 rounded-full transition-colors ${settings.dataCollection ? 'bg-primary' : 'bg-muted'}`}
           />
         </div>
       </div>
 
       {/* Sharing Settings */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3">
-        <p className="font-bold text-lg">👥 分享设置</p>
+      <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
+        <p className="font-bold text-lg text-foreground">👥 分享设置</p>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold">分享学习进度</p>
+            <p className="font-bold text-foreground">分享学习进度</p>
             <p className="text-xs text-muted-foreground">允许分享成就和进度</p>
           </div>
           <button
             onClick={() => toggleSetting('shareProgress')}
-            className={`w-12 h-6 rounded-full transition-colors ${settings.shareProgress ? 'bg-indigo-500' : 'bg-slate-300'}`}
+            className={`w-12 h-6 rounded-full transition-colors ${settings.shareProgress ? 'bg-primary' : 'bg-muted'}`}
           />
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold">公开个人资料</p>
+            <p className="font-bold text-foreground">公开个人资料</p>
             <p className="text-xs text-muted-foreground">允许其他用户查看你的资料</p>
           </div>
           <button
             onClick={() => toggleSetting('publicProfile')}
-            className={`w-12 h-6 rounded-full transition-colors ${settings.publicProfile ? 'bg-indigo-500' : 'bg-slate-300'}`}
+            className={`w-12 h-6 rounded-full transition-colors ${settings.publicProfile ? 'bg-primary' : 'bg-muted'}`}
           />
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold">允许评论</p>
+            <p className="font-bold text-foreground">允许评论</p>
             <p className="text-xs text-muted-foreground">允许其他用户评论你的内容</p>
           </div>
           <button
             onClick={() => toggleSetting('allowComments')}
-            className={`w-12 h-6 rounded-full transition-colors ${settings.allowComments ? 'bg-indigo-500' : 'bg-slate-300'}`}
+            className={`w-12 h-6 rounded-full transition-colors ${settings.allowComments ? 'bg-primary' : 'bg-muted'}`}
           />
         </div>
       </div>
 
       {/* Data Retention */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3">
-        <p className="font-bold text-lg">⏰ 数据保留</p>
+      <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
+        <p className="font-bold text-lg text-foreground">⏰ 数据保留</p>
         <div className="text-sm text-muted-foreground mb-2">
           选择多久后自动删除旧的学习记录
         </div>
         <select
           value={settings.dataRetention}
           onChange={(e: any) => setSettings({ ...settings, dataRetention: parseInt(e.target.value) })}
-          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value={30}>30 天</option>
           <option value={90}>90 天</option>
@@ -148,18 +148,18 @@ export default function PrivacySettings() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-red-50 rounded-2xl p-4 border border-red-200 space-y-3">
+      <div className="bg-destructive/10 rounded-2xl p-4 border border-destructive/20 space-y-3">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle size={20} className="text-red-600" />
-          <p className="font-bold text-red-900">⚠️ 危险区域</p>
+          <AlertCircle size={20} className="text-destructive" />
+          <p className="font-bold text-destructive">⚠️ 危险区域</p>
         </div>
         <button
           onClick={deleteAllData}
-          className="w-full bg-red-600 text-white rounded-lg py-2 font-bold hover:bg-red-700 transition-colors"
+          className="w-full bg-destructive text-destructive-foreground rounded-lg py-2 font-bold hover:bg-destructive/90 transition-colors"
         >
           🗑️ 删除所有数据
         </button>
-        <p className="text-xs text-red-700">
+        <p className="text-xs text-destructive/80">
           此操作将永久删除所有学习数据。此操作不可撤销。
         </p>
       </div>

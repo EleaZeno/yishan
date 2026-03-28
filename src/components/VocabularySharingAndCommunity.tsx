@@ -55,9 +55,9 @@ export default function VocabularySharingAndCommunity() {
   const [userRating, setUserRating] = useState(0);
 
   const difficultyColors = {
-    easy: 'bg-emerald-100 text-emerald-700',
-    medium: 'bg-amber-100 text-amber-700',
-    hard: 'bg-red-100 text-red-700',
+    easy: 'bg-emerald-500/10 text-emerald-500',
+    medium: 'bg-amber-500/10 text-amber-500',
+    hard: 'bg-destructive/10 text-destructive',
   };
 
   const difficultyLabels = {
@@ -84,7 +84,7 @@ export default function VocabularySharingAndCommunity() {
       </div>
 
       {/* Featured Sets */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+      <div className="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-6 text-white">
         <p className="text-lg font-black mb-2">⭐ 本周热门</p>
         <p className="text-sm opacity-90">高考英语核心词汇 - 12,450 次下载</p>
       </div>
@@ -92,10 +92,10 @@ export default function VocabularySharingAndCommunity() {
       {/* Vocabulary Sets */}
       <div className="space-y-3">
         {vocabSets.map((set, i) => (
-          <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200">
+          <div key={i} className="bg-card rounded-2xl p-4 border border-border">
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <p className="font-bold text-lg">{set.name}</p>
+                <p className="font-bold text-lg text-foreground">{set.name}</p>
                 <p className="text-xs text-muted-foreground">作者: {set.author}</p>
               </div>
               <span className={`text-xs px-2 py-1 rounded-lg font-bold ${difficultyColors[set.difficulty]}`}>
@@ -104,22 +104,22 @@ export default function VocabularySharingAndCommunity() {
             </div>
             <p className="text-sm text-muted-foreground mb-3">{set.description}</p>
             <div className="flex gap-4 text-sm mb-3">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-foreground">
                 <span>📚</span>
                 {set.words} 词
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-foreground">
                 <span>⬇️</span>
                 {set.downloads} 次
               </span>
-              <span className="flex items-center gap-1 text-amber-600">
+              <span className="flex items-center gap-1 text-amber-500">
                 <span>⭐</span>
                 {set.rating}
               </span>
             </div>
             <div className="flex gap-2 mb-3">
               {set.tags.map((tag, j) => (
-                <span key={j} className="text-xs px-2 py-1 rounded-lg bg-slate-100 text-slate-700">
+                <span key={j} className="text-xs px-2 py-1 rounded-lg bg-muted text-muted-foreground">
                   {tag}
                 </span>
               ))}
@@ -127,18 +127,18 @@ export default function VocabularySharingAndCommunity() {
             <div className="flex gap-2">
               <button
                 onClick={() => downloadVocabSet(set)}
-                className="flex-1 bg-indigo-500 text-white rounded-lg py-2 font-bold hover:bg-indigo-600 transition-colors flex items-center justify-center gap-1"
+                className="flex-1 bg-primary text-primary-foreground rounded-lg py-2 font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-1"
               >
                 <Download size={16} /> 下载
               </button>
               <button
-                className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1"
+                className="flex-1 bg-muted text-muted-foreground rounded-lg py-2 font-bold hover:bg-muted/80 transition-colors flex items-center justify-center gap-1"
               >
                 <Heart size={16} /> 收藏
               </button>
               <button
                 onClick={() => setSelectedSet(set)}
-                className="flex-1 bg-slate-100 text-slate-700 rounded-lg py-2 font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1"
+                className="flex-1 bg-muted text-muted-foreground rounded-lg py-2 font-bold hover:bg-muted/80 transition-colors flex items-center justify-center gap-1"
               >
                 <MessageCircle size={16} /> 评价
               </button>
@@ -150,14 +150,14 @@ export default function VocabularySharingAndCommunity() {
       {/* Rating Modal */}
       {selectedSet && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-            <p className="text-lg font-black mb-4">评价 "{selectedSet.name}"</p>
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full mx-4 border border-border">
+            <p className="text-lg font-black mb-4 text-foreground">评价 "{selectedSet.name}"</p>
             <div className="flex gap-2 mb-4 justify-center">
               {[...Array(5)].map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setUserRating(i + 1)}
-                  className={`text-3xl transition-transform ${userRating > i ? 'text-amber-400 scale-110' : 'text-slate-300'}`}
+                  className={`text-3xl transition-transform ${userRating > i ? 'text-amber-400 scale-110' : 'text-muted'}`}
                 >
                   ⭐
                 </button>
@@ -165,18 +165,18 @@ export default function VocabularySharingAndCommunity() {
             </div>
             <textarea
               placeholder="分享你的评价..."
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-24 mb-4"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none h-24 mb-4 placeholder:text-muted-foreground"
             />
             <div className="flex gap-2">
               <button
                 onClick={() => submitRating(selectedSet)}
-                className="flex-1 bg-indigo-500 text-white rounded-lg py-2 font-bold hover:bg-indigo-600"
+                className="flex-1 bg-primary text-primary-foreground rounded-lg py-2 font-bold hover:bg-primary/90"
               >
                 提交
               </button>
               <button
                 onClick={() => setSelectedSet(null)}
-                className="flex-1 bg-slate-200 text-slate-700 rounded-lg py-2 font-bold hover:bg-slate-300"
+                className="flex-1 bg-muted text-foreground rounded-lg py-2 font-bold hover:bg-muted/80"
               >
                 关闭
               </button>
@@ -186,22 +186,22 @@ export default function VocabularySharingAndCommunity() {
       )}
 
       {/* Community Recommendations */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200">
-        <p className="font-bold text-lg mb-3 flex items-center gap-2">
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <p className="font-bold text-lg mb-3 flex items-center gap-2 text-foreground">
           <TrendingUp size={20} />
           社区推荐
         </p>
         <div className="space-y-2">
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <p className="font-bold">🔥 本周最热</p>
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-foreground">🔥 本周最热</p>
             <p className="text-sm text-muted-foreground">高考英语核心词汇 - 1,234 人下载</p>
           </div>
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <p className="font-bold">⭐ 最高评分</p>
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-foreground">⭐ 最高评分</p>
             <p className="text-sm text-muted-foreground">TOEFL 词汇精选 - 4.9 星</p>
           </div>
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <p className="font-bold">🆕 最新发布</p>
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-foreground">🆕 最新发布</p>
             <p className="text-sm text-muted-foreground">商务英语 500 词 - 刚发布</p>
           </div>
         </div>

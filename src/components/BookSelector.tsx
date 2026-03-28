@@ -50,10 +50,10 @@ const BookSelector: React.FC<BookSelectorProps> = ({
   // 获取难度颜色
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-700';
-      case 'medium': return 'bg-yellow-100 text-yellow-700';
-      case 'hard': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'easy': return 'bg-green-500/10 text-green-500';
+      case 'medium': return 'bg-yellow-500/10 text-yellow-500';
+      case 'hard': return 'bg-red-500/10 text-red-500';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 

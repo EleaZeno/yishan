@@ -80,20 +80,20 @@ export default function StudyPlanGenerator() {
       {/* Create Plan Button */}
       <button
         onClick={() => setShowForm(!showForm)}
-        className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-2xl p-4 font-bold hover:shadow-lg transition-all"
+        className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-2xl p-4 font-bold hover:shadow-lg transition-all"
       >
         + 生成新计划
       </button>
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3">
+        <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
           <input
             type="text"
             placeholder="计划名称（可选）"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
           />
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -104,7 +104,7 @@ export default function StudyPlanGenerator() {
                 max={100}
                 value={formData.dailyGoal}
                 onChange={(e) => setFormData({ ...formData, dailyGoal: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div>
@@ -115,13 +115,13 @@ export default function StudyPlanGenerator() {
                 max={365}
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
           <button
             onClick={generatePlan}
-            className="w-full bg-indigo-500 text-white rounded-lg py-2 font-bold hover:bg-indigo-600 transition-colors"
+            className="w-full bg-primary text-primary-foreground rounded-lg py-2 font-bold hover:bg-primary/90 transition-colors"
           >
             生成计划
           </button>
@@ -131,40 +131,40 @@ export default function StudyPlanGenerator() {
       {/* Plans List */}
       <div className="space-y-3">
         {plans.map((plan, i) => (
-          <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200">
+          <div key={i} className="bg-card rounded-2xl p-4 border border-border">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="font-bold">{plan.name}</p>
+                <p className="font-bold text-foreground">{plan.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {plan.startDate.toLocaleDateString()} - {plan.endDate.toLocaleDateString()}
                 </p>
               </div>
               <span className={`text-xs px-2 py-1 rounded-lg font-bold ${
-                plan.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                plan.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                'bg-slate-100 text-slate-700'
+                plan.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
+                plan.status === 'completed' ? 'bg-blue-500/10 text-blue-500' :
+                'bg-muted text-muted-foreground'
               }`}>
                 {plan.status}
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-sm">
               <div className="text-center">
-                <p className="font-bold text-lg">{plan.dailyGoal}</p>
+                <p className="font-bold text-lg text-foreground">{plan.dailyGoal}</p>
                 <p className="text-xs text-muted-foreground">每日目标</p>
               </div>
               <div className="text-center">
-                <p className="font-bold text-lg">{plan.duration}</p>
+                <p className="font-bold text-lg text-foreground">{plan.duration}</p>
                 <p className="text-xs text-muted-foreground">天数</p>
               </div>
               <div className="text-center">
-                <p className="font-bold text-lg">{plan.words.length}</p>
+                <p className="font-bold text-lg text-foreground">{plan.words.length}</p>
                 <p className="text-xs text-muted-foreground">词汇</p>
               </div>
             </div>
             <div className="mt-3">
-              <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-500 transition-all"
+                  className="h-full bg-primary transition-all"
                   style={{ width: `${plan.progress}%` }}
                 />
               </div>

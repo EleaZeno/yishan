@@ -200,11 +200,11 @@ const Practice: React.FC<PracticeProps> = ({ userId, onBack }) => {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="text-center p-8">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${accuracy >= 70 ? 'bg-green-100' : 'bg-orange-100'}`}>
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${accuracy >= 70 ? 'bg-green-100 dark:bg-green-500/20' : 'bg-orange-100 dark:bg-orange-500/20'}`}>
             {accuracy >= 70 ? (
-              <Star className="w-10 h-10 text-green-600" />
+              <Star className="w-10 h-10 text-green-600 dark:text-green-400" />
             ) : (
-              <Zap className="w-10 h-10 text-orange-600" />
+              <Zap className="w-10 h-10 text-orange-600 dark:text-orange-400" />
             )}
           </div>
           
@@ -230,18 +230,18 @@ const Practice: React.FC<PracticeProps> = ({ userId, onBack }) => {
           {/* 答题回顾 */}
           <div className="text-left space-y-4 mb-8 max-h-64 overflow-y-auto pr-2">
             {answers.map((answer, i) => (
-              <div key={i} className={`p-4 rounded-xl ${answer.correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
+              <div key={i} className={`p-4 rounded-xl ${answer.correct ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20'} border`}>
                 <div className="flex items-center gap-2 mb-2">
                   {answer.correct ? (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                   ) : (
-                    <XCircle className="w-4 h-4 text-red-600" />
+                    <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                   )}
-                  <span className={`font-medium ${answer.correct ? 'text-green-700' : 'text-red-700'}`}>
+                  <span className={`font-medium ${answer.correct ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
                     {answer.correct ? '✓ 正确' : '✗ 错误'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">{questions[i]?.explanation}</p>
+                <p className="text-sm text-muted-foreground">{questions[i]?.explanation}</p>
               </div>
             ))}
           </div>

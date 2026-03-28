@@ -107,11 +107,11 @@ export default function ReminderSystem() {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3">
+        <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
           <select
             value={newReminder.type}
             onChange={(e: any) => setNewReminder({ ...newReminder, type: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="daily">每日提醒</option>
             <option value="weekly">每周提醒</option>
@@ -121,17 +121,17 @@ export default function ReminderSystem() {
             type="time"
             value={newReminder.time}
             onChange={(e: any) => setNewReminder({ ...newReminder, time: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <textarea
             placeholder="提醒内容..."
             value={newReminder.message}
             onChange={(e: any) => setNewReminder({ ...newReminder, message: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none h-20"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none h-20"
           />
           <button
             onClick={addReminder}
-            className="w-full bg-indigo-500 text-white rounded-lg py-2 font-bold hover:bg-indigo-600 transition-colors"
+            className="w-full bg-primary text-primary-foreground rounded-lg py-2 font-bold hover:bg-primary/90 transition-colors"
           >
             添加
           </button>
@@ -141,13 +141,13 @@ export default function ReminderSystem() {
       {/* Reminders List */}
       <div className="space-y-3">
         {reminders.map((reminder, i) => (
-          <div key={i} className={`bg-white rounded-2xl p-4 border border-slate-200 ${!reminder.enabled ? 'opacity-50' : ''}`}>
+          <div key={i} className={`bg-card rounded-2xl p-4 border border-border ${!reminder.enabled ? 'opacity-50' : ''}`}>
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <Clock size={16} className="text-indigo-500" />
-                  <span className="font-bold">{reminder.time}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600">
+                  <Clock size={16} className="text-primary" />
+                  <span className="font-bold text-foreground">{reminder.time}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-lg bg-muted text-muted-foreground">
                     {reminder.type === 'daily' ? '每日' : reminder.type === 'weekly' ? '每周' : '自定义'}
                   </span>
                 </div>
@@ -156,20 +156,20 @@ export default function ReminderSystem() {
               <div className="flex gap-2">
                 <button
                   onClick={() => sendTestNotification(reminder)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-muted text-muted-foreground rounded-lg transition-colors"
                   title="测试通知"
                 >
                   <Bell size={16} />
                 </button>
                 <button
                   onClick={() => toggleReminder(reminder.id)}
-                  className={`p-2 rounded-lg transition-colors ${reminder.enabled ? 'text-emerald-600 hover:bg-emerald-100' : 'text-slate-400 hover:bg-slate-100'}`}
+                  className={`p-2 rounded-lg transition-colors ${reminder.enabled ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-muted-foreground hover:bg-muted'}`}
                 >
                   <CheckCircle size={16} />
                 </button>
                 <button
                   onClick={() => deleteReminder(reminder.id)}
-                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                  className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -187,7 +187,7 @@ export default function ReminderSystem() {
       )}
 
       {/* Info */}
-      <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200 text-sm text-blue-700">
+      <div className="bg-blue-500/10 rounded-2xl p-4 border border-blue-500/20 text-sm text-blue-500">
         <p className="font-bold mb-1">💡 提示</p>
         <p>需要浏览器通知权限才能接收提醒。请在浏览器设置中允许通知。</p>
       </div>
