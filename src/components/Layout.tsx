@@ -23,7 +23,7 @@ interface LayoutProps {
   onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAddClick, onAdminClick, user, onLogout }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, onAddClick, user, onLogout }) => {
   
   const navItems = [
     { id: 'dashboard', label: '首页', icon: BarChart3 },

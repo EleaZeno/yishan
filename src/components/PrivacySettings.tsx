@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, Trash2, Shield, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PrivacySettings {
   dataCollection: boolean;
@@ -34,11 +35,16 @@ export default function PrivacySettings() {
   };
 
   const deleteAllData = () => {
-    if (confirm('确定要删除所有数据？此操作不可撤销！')) {
-      localStorage.clear();
-      alert('所有数据已删除');
-      window.location.reload();
-    }
+    toast('确定要删除所有数据？此操作不可撤销！', {
+      action: {
+        label: '确定',
+        onClick: () => {
+          localStorage.clear();
+          toast.success('所有数据已删除');
+          setTimeout(() => window.location.reload(), 1000);
+        }
+      }
+    });
   };
 
   return (

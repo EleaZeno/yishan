@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { VOCAB_TEST_BANK } from '../data/testBank';
+import { VOCAB_DATA } from '../data/vocab-data';
 import { X, Check, BrainCircuit, Trophy, ChevronRight, RefreshCw } from 'lucide-react';
 import { playSound } from '../lib/sound';
 
@@ -17,7 +17,7 @@ const VocabTest: React.FC<VocabTestProps> = ({ onClose, onFinish }) => {
   
   // 随机抽取测试集
   const testSet = useMemo(() => {
-    return [...VOCAB_TEST_BANK].sort(() => Math.random() - 0.5);
+    return [...VOCAB_DATA].sort(() => Math.random() - 0.5);
   }, []);
 
   const handleAnswer = (known: boolean) => {
@@ -115,7 +115,7 @@ const VocabTest: React.FC<VocabTestProps> = ({ onClose, onFinish }) => {
               </div>
 
               <div className="bg-slate-50 border border-slate-100 p-12 rounded-[2.5rem] text-center mb-12 min-h-[240px] flex flex-col items-center justify-center">
-                <h3 className="text-5xl font-black text-slate-900 tracking-tighter mb-4">{testSet[currentIndex].term}</h3>
+                <h3 className="text-5xl font-black text-slate-900 tracking-tighter mb-4">{testSet[currentIndex].word}</h3>
                 <div className="flex gap-2">
                   {[1,2,3,4,5].map(lvl => (
                      <div key={lvl} className={`w-1.5 h-1.5 rounded-full ${lvl <= testSet[currentIndex].level ? 'bg-indigo-400' : 'bg-slate-200'}`} />

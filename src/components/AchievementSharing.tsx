@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Share2, Copy, Download, Heart, MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ShareCard {
   id: string;
@@ -38,7 +39,7 @@ export default function AchievementSharing() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('已复制到剪贴板');
+    toast.success('已复制到剪贴板');
   };
 
   const downloadShareImage = (card: ShareCard) => {

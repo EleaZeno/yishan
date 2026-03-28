@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/storage';
 import { Cloud, Download, Upload, RotateCcw, Lock, Eye, EyeOff, Trash2, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface BackupData {
   id: string;
@@ -73,24 +74,34 @@ export default function CloudBackupSystem() {
     setLoading(false);
   };
 
-  const restoreBackup = async (backup: BackupData) => {
-    if (!confirm('确定要恢复此备份？这将覆盖当前数据。')) return;
-    
-    setLoading(true);
-    try {
-      // 模拟恢复过程
-      await new Promise(r => setTimeout(r, 1000));
-      alert('备份恢复成功！');
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
+  const restoreBackup = (backup: BackupData) => {
+    toast('确定要恢复此备份？这将覆盖当前数据。', {
+      action: {
+        label: '确定',
+        onClick: async () => {
+          setLoading(true);
+          try {
+            // 模拟恢复过程
+            await new Promise(r => setTimeout(r, 1000));
+            toast.success('备份恢复成功！');
+          } catch (e) {
+            console.error(e);
+          }
+          setLoading(false);
+        }
+      }
+    });
   };
 
   const deleteBackup = (id: string) => {
-    if (confirm('确定要删除此备份？')) {
-      setBackups(backups.filter(b => b.id !== id));
-    }
+    toast('确定要删除此备份？', {
+      action: {
+        label: '确定',
+        onClick: () => {
+          setBackups(backups.filter(b => b.id !== id));
+        }
+      }
+    });
   };
 
   return (

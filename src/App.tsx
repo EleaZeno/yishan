@@ -1,4 +1,4 @@
-﻿﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import AddWordModal from './components/AddWordModal';
 import AuthPage from './components/AuthPage';
@@ -29,6 +29,7 @@ import { Loader2, Database, BookOpen, Brain, TrendingUp, RefreshCw, Download, Za
 import { Button } from './components/ui/button';
 import { getCoreVocabulary } from './data/vocabulary';
 import { initAudio } from './lib/sound';
+import { Toaster, toast } from 'sonner';
 
 const AdminPanel = () => {
   const [total, setTotal] = useState(0);
@@ -287,29 +288,40 @@ const App: React.FC = () => {
     loadDashboardData();
   };
 
-  const handleDeleteWord = async (id: string) => {
-    if(confirm('Remove this word?')) {
-        await db.deleteWord(id);
-        loadDashboardData();
-    }
+  const handleDeleteWord = (id: string) => {
+    toast('Remove this word?', {
+      action: {
+        label: 'Confirm',
+        onClick: async () => {
+          await db.deleteWord(id);
+          loadDashboardData();
+        }
+      }
+    });
   }
 
   const handleUpdateWord = (updatedWord: Word) => {
     setChartData(prev => prev.map(w => w.id === updatedWord.id ? updatedWord : w));
   };
   
-  const handleImportCore = async () => {
-      if (!confirm('Import core vocabulary?')) return;
-      setIsImporting(true);
-      try {
-          const vocab = getCoreVocabulary().map(v => ({
-            ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
-            ...getInitialWordState(), createdAt: Date.now()
-          } as Word));
-          await db.importWords(vocab);
-          await loadDashboardData();
-      } catch (e) { console.error(e); }
-      setIsImporting(false);
+  const handleImportCore = () => {
+      toast('Import core vocabulary?', {
+        action: {
+          label: 'Confirm',
+          onClick: async () => {
+            setIsImporting(true);
+            try {
+                const vocab = getCoreVocabulary().map(v => ({
+                  ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
+                  ...getInitialWordState(), createdAt: Date.now()
+                } as Word));
+                await db.importWords(vocab);
+                await loadDashboardData();
+            } catch (e) { console.error(e); }
+            setIsImporting(false);
+          }
+        }
+      });
   };
 
   if (authChecking) {
@@ -356,6 +368,7 @@ const App: React.FC = () => {
       {activeTab === 'community' && <VocabularySharingAndCommunity />}
       {activeTab === 'admin' && <AdminPanel />}
       <AddWordModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSave={handleAddWord} />
+      <Toaster />
     </Layout>
   );
 };

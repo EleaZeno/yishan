@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Share2, Download, Heart, MessageCircle, Star, TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface VocabularySet {
   id: string;
@@ -66,11 +67,11 @@ export default function VocabularySharingAndCommunity() {
   };
 
   const downloadVocabSet = (set: VocabularySet) => {
-    alert(`已下载 "${set.name}" 词库！`);
+    toast.success(`已下载 "${set.name}" 词库！`);
   };
 
   const submitRating = (set: VocabularySet) => {
-    alert(`感谢评分！你给了 ${userRating} 星`);
+    toast.success(`感谢评分！你给了 ${userRating} 星`);
     setUserRating(0);
   };
 

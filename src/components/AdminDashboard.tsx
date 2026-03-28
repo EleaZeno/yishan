@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '../services/storage';
 import { Button } from './ui/button';
 import { Loader2, Database, BookOpen, Brain, TrendingUp, RefreshCw, Download, Upload, Trash2, Edit3, Plus, BarChart3, Zap, Search, Filter, Settings } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AdminDashboard() {
   const [total, setTotal] = useState(0);
@@ -58,11 +59,16 @@ export default function AdminDashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const deleteWord = async (id: string) => {
-    if (confirm('确定删除此词汇？')) {
-      await db.deleteWord(id);
-      loadData();
-    }
+  const deleteWord = (id: string) => {
+    toast('确定删除此词汇？', {
+      action: {
+        label: '确定',
+        onClick: async () => {
+          await db.deleteWord(id);
+          loadData();
+        }
+      }
+    });
   };
 
   return (
