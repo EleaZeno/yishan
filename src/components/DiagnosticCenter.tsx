@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Target, TrendingUp, Zap, ArrowRight, CheckCircle, XCircle, Clock, ChevronRight, Loader2, Headphones, PenTool } from 'lucide-react';
-import { ABILITY_DIMENSIONS, getProgressColor, getAbilityLevel, getStudentModel, StudentAbility } from '../services/assessment';
+import { Brain, Target, TrendingUp, Zap, ArrowRight, CheckCircle, XCircle, Clock, ChevronRight, Loader2, Headphones, PenTool, GraduationCap } from 'lucide-react';
+import { ABILITY_DIMENSIONS, getProgressColor, getAbilityLevel, getStudentModel, StudentAbility, resetAssessment, EXAM_TYPES, predictExamScore } from '../services/assessment';
 import AbilityRadar from './AbilityRadar';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { toast } from 'sonner';
 
 interface DiagnosticCenterProps {
   userId?: string;
@@ -22,6 +23,7 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
   });
   const [loading, setLoading] = useState(true);
   const [testInProgress, setTestInProgress] = useState(false);
+  const [targetExam, setTargetExam] = useState<string>('gaokao');
 
   useEffect(() => {
     loadAbility();
@@ -61,6 +63,9 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
     return abilities[key as keyof typeof abilities] || 0.5;
   };
 
+  const currentExam = EXAM_TYPES.find(e => e.id === targetExam) || EXAM_TYPES[2];
+  const predictedScore = predictExamScore(abilities.overall, targetExam);
+
   return (
     <div className="space-y-6">
       {/* 顶部卡片 */}
@@ -76,26 +81,103 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         </Card>
 
         {/* 综合评分 */}
-        <Card className="md:col-span-2 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-none">
-          <CardContent className="p-6 h-full flex items-center justify-between">
-            <div>
-              <p className="text-primary-foreground/80 mb-2">预测考试分数</p>
-              <div className="text-6xl font-bold">{Math.round(abilities.predictedScore)}</div>
-              <p className="text-primary-foreground/80 mt-2">{getAbilityLevel(abilities.predictedScore)}</p>
+        <Card className="md:col-span-2 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-none relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+            <Brain size={120} />
+          </div>
+          <CardContent className="p-6 h-full flex flex-col justify-between relative z-10">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <select 
+                    value={targetExam}
+                    onChange={(e) => setTargetExam(e.target.value)}
+                    className="bg-white/20 text-white text-sm px-3 py-1 rounded-full font-bold tracking-wider border-none outline-none cursor-pointer appearance-none"
+                  >
+                    {EXAM_TYPES.map(exam => (
+                      <option key={exam.id} value={exam.id} className="text-black">{exam.name}</option>
+                    ))}
+                  </select>
+                  <span className="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider">BKT 预测</span>
+                </div>
+                <div className="text-6xl font-black tracking-tighter flex items-baseline gap-2">
+                  {predictedScore}
+                  <span className="text-2xl font-medium text-primary-foreground/80">{currentExam.unit}</span>
+                </div>
+                <p className="text-primary-foreground/90 mt-2 font-medium bg-black/10 inline-block px-3 py-1 rounded-full text-sm">
+                  满分 {currentExam.maxScore} {currentExam.unit}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-primary-foreground/80 mb-1 font-medium">综合能力基数</p>
+                <div className="text-4xl font-bold">{Math.round(abilities.overall * 100)}%</div>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-primary-foreground/80 mb-1">综合能力</p>
-              <div className="text-4xl font-semibold">{Math.round(abilities.overall * 100)}%</div>
-              <p className="text-primary-foreground/80 text-sm mt-1">较上次 +5%</p>
+            
+            <div className="mt-6 pt-4 border-t border-white/20">
+              <p className="text-xs text-primary-foreground/80 leading-relaxed">
+                <strong className="text-white">终身学习预测：</strong> 系统基于您的综合能力基数，通过非线性映射算法，为您预测在不同难度考试中的表现。
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* 能力维度详情 */}
+      {/* 终身学习轨迹预测 */}
       <Card className="border-border/50">
         <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="text-primary" size={24} />
+            <CardTitle className="text-lg font-semibold">终身学习轨迹预测</CardTitle>
+          </div>
+          <p className="text-sm text-muted-foreground">基于您当前的综合能力 ({Math.round(abilities.overall * 100)}%)，预测您在各阶段考试中的表现</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {EXAM_TYPES.map((exam) => {
+              const score = predictExamScore(abilities.overall, exam.id);
+              const isTarget = exam.id === targetExam;
+              return (
+                <div 
+                  key={exam.id} 
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${isTarget ? 'bg-primary/5 border-primary shadow-sm' : 'bg-card hover:bg-muted/50'}`}
+                  onClick={() => setTargetExam(exam.id)}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className={`font-bold ${isTarget ? 'text-primary' : 'text-foreground'}`}>{exam.name}</h4>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black">{score}</span>
+                    <span className="text-xs text-muted-foreground">/ {exam.maxScore}</span>
+                  </div>
+                  <div className="mt-3 text-[10px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-md inline-block">
+                    {exam.desc}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 能力维度详情 */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-4 flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-semibold">能力维度分析</CardTitle>
+          <Button variant="outline" size="sm" onClick={async () => {
+            toast('确定要重置所有评估数据吗？', {
+              action: {
+                label: '确定',
+                onClick: async () => {
+                  await resetAssessment(userId);
+                  loadAbility();
+                  toast.success('评估数据已重置');
+                }
+              }
+            });
+          }}>
+            重置评估
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
@@ -240,18 +322,48 @@ const DiagnosticCenter: React.FC<DiagnosticCenterProps> = ({ userId, onStartTest
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
-            <li className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
-              <span className="text-amber-900/80 dark:text-amber-500/80">词汇量是英语学习的基础，建议每天背诵20个新单词</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
-              <span className="text-amber-900/80 dark:text-amber-500/80">语法较弱，建议系统学习从句和非谓语动词</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
-              <span className="text-amber-900/80 dark:text-amber-500/80">阅读理解需要多读英文文章，练习定位细节和推理判断</span>
-            </li>
+            {abilities.vocabulary < 0.6 && (
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+                <span className="text-amber-900/80 dark:text-amber-500/80">词汇量是英语学习的基础，当前词汇量偏低，建议每天背诵20个新单词。</span>
+              </li>
+            )}
+            {abilities.grammar < 0.6 && (
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+                <span className="text-amber-900/80 dark:text-amber-500/80">语法基础较弱，建议系统学习从句和非谓语动词等核心语法点。</span>
+              </li>
+            )}
+            {abilities.reading < 0.6 && (
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+                <span className="text-amber-900/80 dark:text-amber-500/80">阅读理解需要提升，建议多读英文文章，练习定位细节和推理判断。</span>
+              </li>
+            )}
+            {abilities.listening < 0.6 && (
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+                <span className="text-amber-900/80 dark:text-amber-500/80">听力获取信息能力不足，建议每天进行15分钟的精听训练。</span>
+              </li>
+            )}
+            {abilities.writing < 0.6 && (
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+                <span className="text-amber-900/80 dark:text-amber-500/80">写作基础有待加强，建议从句子翻译开始，逐步过渡到段落写作。</span>
+              </li>
+            )}
+            {abilities.overall >= 0.6 && abilities.overall < 0.8 && (
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+                <span className="text-amber-900/80 dark:text-amber-500/80">综合能力良好，建议针对薄弱环节进行专项突破，保持日常练习。</span>
+              </li>
+            )}
+            {abilities.overall >= 0.8 && (
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 shrink-0" />
+                <span className="text-amber-900/80 dark:text-amber-500/80">综合能力优秀！建议挑战更高难度的阅读材料和听力素材，拓展知识面。</span>
+              </li>
+            )}
           </ul>
         </CardContent>
       </Card>

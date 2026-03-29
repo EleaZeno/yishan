@@ -4,6 +4,7 @@ import { getRandomQuestions, type Question } from '../data/questions';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
+import { updateKnowledgeMastery } from '../services/assessment';
 import { KNOWLEDGE_GRAPH } from '../data/knowledge-graph';
 
 interface ListeningTestProps {
@@ -44,15 +45,7 @@ const ListeningTest: React.FC<ListeningTestProps> = ({ userId, onBack }) => {
 
     if (userId) {
       try {
-        await fetch('/api/assessment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'update_mastery',
-            userId,
-            data: { knowledgeId: currentQ.knowledgeId, isCorrect, priorMastery: 0.5 }
-          })
-        });
+        await updateKnowledgeMastery(currentQ.knowledgeId, isCorrect, 0.5, userId);
       } catch (e) {
         console.error('Failed to update:', e);
       }
@@ -72,13 +65,13 @@ const ListeningTest: React.FC<ListeningTestProps> = ({ userId, onBack }) => {
         // 计算知识点掌握情况
         const breakdown: Record<string, { correct: number; total: number }> = {};
         newAnswers.forEach(ans => {
-          const category = KNOWLEDGE_GRAPH[ans.question.knowledgeId]?.category || '听力';
-          if (!breakdown[category]) {
-            breakdown[category] = { correct: 0, total: 0 };
+          const pointName = KNOWLEDGE_GRAPH[ans.question.knowledgeId]?.name || '其他听力';
+          if (!breakdown[pointName]) {
+            breakdown[pointName] = { correct: 0, total: 0 };
           }
-          breakdown[category].total += 1;
+          breakdown[pointName].total += 1;
           if (ans.isCorrect) {
-            breakdown[category].correct += 1;
+            breakdown[pointName].correct += 1;
           }
         });
 
@@ -185,16 +178,16 @@ const ListeningTest: React.FC<ListeningTestProps> = ({ userId, onBack }) => {
                 听力题型掌握分析
               </h3>
               <div className="space-y-4">
-                {Object.entries(result.breakdown).map(([category, data]) => {
+                {Object.entries(result.breakdown).map(([pointName, data]) => {
                   const percentage = Math.round((data.correct / data.total) * 100);
                   let colorClass = 'bg-green-500';
                   if (percentage < 60) colorClass = 'bg-red-500';
                   else if (percentage < 80) colorClass = 'bg-yellow-500';
 
                   return (
-                    <div key={category} className="bg-muted/30 p-4 rounded-xl">
+                    <div key={pointName} className="bg-muted/30 p-4 rounded-xl">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-foreground">{category}</span>
+                        <span className="font-medium text-foreground">{pointName}</span>
                         <span className="text-sm font-bold">{percentage}% ({data.correct}/{data.total})</span>
                       </div>
                       <Progress value={percentage} className="h-2" indicatorClassName={colorClass} />
@@ -260,7 +253,7 @@ const ListeningTest: React.FC<ListeningTestProps> = ({ userId, onBack }) => {
       <Card className="border-none shadow-sm">
         <CardContent className="pt-8 pb-8">
           <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
-            {KNOWLEDGE_GRAPH[currentQ.knowledgeId]?.category || '听力'}
+            {KNOWLEDGE_GRAPH[currentQ.knowledgeId]?.name || '听力'}
           </div>
           
           <div className="bg-muted/50 rounded-xl p-6 mb-6 flex flex-col items-center gap-4">

@@ -65,13 +65,13 @@ const ReadingTest: React.FC<ReadingTestProps> = ({ userId, onBack }) => {
         // 计算知识点掌握情况
         const breakdown: Record<string, { correct: number; total: number }> = {};
         newAnswers.forEach(ans => {
-          const category = KNOWLEDGE_GRAPH[ans.question.knowledgeId]?.category || '阅读';
-          if (!breakdown[category]) {
-            breakdown[category] = { correct: 0, total: 0 };
+          const pointName = KNOWLEDGE_GRAPH[ans.question.knowledgeId]?.name || '其他阅读';
+          if (!breakdown[pointName]) {
+            breakdown[pointName] = { correct: 0, total: 0 };
           }
-          breakdown[category].total += 1;
+          breakdown[pointName].total += 1;
           if (ans.isCorrect) {
-            breakdown[category].correct += 1;
+            breakdown[pointName].correct += 1;
           }
         });
 
@@ -168,16 +168,16 @@ const ReadingTest: React.FC<ReadingTestProps> = ({ userId, onBack }) => {
                 阅读题型掌握分析
               </h3>
               <div className="space-y-4">
-                {Object.entries(result.breakdown).map(([category, data]) => {
+                {Object.entries(result.breakdown).map(([pointName, data]) => {
                   const percentage = Math.round((data.correct / data.total) * 100);
                   let colorClass = 'bg-green-500';
                   if (percentage < 60) colorClass = 'bg-red-500';
                   else if (percentage < 80) colorClass = 'bg-yellow-500';
 
                   return (
-                    <div key={category} className="bg-muted/30 p-4 rounded-xl">
+                    <div key={pointName} className="bg-muted/30 p-4 rounded-xl">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-foreground">{category}</span>
+                        <span className="font-medium text-foreground">{pointName}</span>
                         <span className="text-sm font-bold">{percentage}% ({data.correct}/{data.total})</span>
                       </div>
                       <Progress value={percentage} className="h-2" indicatorClassName={colorClass} />
@@ -241,7 +241,7 @@ const ReadingTest: React.FC<ReadingTestProps> = ({ userId, onBack }) => {
       <Card className="border-none shadow-sm">
         <CardContent className="pt-8 pb-8">
           <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
-            {KNOWLEDGE_GRAPH[currentQ.knowledgeId]?.category || '阅读'}
+            {KNOWLEDGE_GRAPH[currentQ.knowledgeId]?.name || '阅读'}
           </div>
           
           <div className="bg-muted/50 rounded-xl p-6 mb-6">

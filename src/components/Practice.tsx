@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Target, Brain, ChevronRight, CheckCircle, XCircle, BookOpen, ArrowRight, Zap, ChevronLeft, Home, Star, Loader2 } from 'lucide-react';
-import { KNOWLEDGE_GRAPH, type KnowledgeNode } from '../data/knowledge-graph';
+import { getWeakPoints, updateKnowledgeMastery } from '../services/assessment';
 import { getQuestionsByKnowledge, type Question } from '../data/questions';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
@@ -38,33 +38,25 @@ const Practice: React.FC<PracticeProps> = ({ userId, onBack }) => {
   const loadWeakPoints = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/assessment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'get_weak_points', userId })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.weakPoints && data.weakPoints.length > 0) {
-          setWeakPoints(data.weakPoints);
-        } else {
-          // 默认薄弱点
-          setWeakPoints([
-            { knowledgeId: 'grammar_tense', name: '时态', mastery: 0.35, category: 'grammar' },
-            { knowledgeId: 'clause_relative', name: '定语从句', mastery: 0.42, category: 'grammar' },
-            { knowledgeId: 'vocab_1500', name: '初中词汇', mastery: 0.55, category: 'vocabulary' },
-            { knowledgeId: 'reading_infer', name: '阅读推理', mastery: 0.48, category: 'reading' },
-            { knowledgeId: 'clause_noun', name: '名词性从句', mastery: 0.38, category: 'grammar' },
-          ]);
-        }
+      const data = await getWeakPoints(userId);
+      if (data && data.length > 0) {
+        setWeakPoints(data);
+      } else {
+        // 默认薄弱点
+        setWeakPoints([
+          { knowledgeId: 'tense_present', name: '现在时态', mastery: 0.35, category: 'grammar' },
+          { knowledgeId: 'clause_relative', name: '定语从句', mastery: 0.42, category: 'grammar' },
+          { knowledgeId: 'vocab_1500', name: '1500词汇', mastery: 0.55, category: 'vocabulary' },
+          { knowledgeId: 'reading_infer', name: '推理判断', mastery: 0.48, category: 'reading' },
+          { knowledgeId: 'clause_noun', name: '名词性从句', mastery: 0.38, category: 'grammar' },
+        ]);
       }
     } catch (error) {
       console.error('Failed to load weak points:', error);
       setWeakPoints([
-        { knowledgeId: 'grammar_tense', name: '时态', mastery: 0.35, category: 'grammar' },
+        { knowledgeId: 'tense_present', name: '现在时态', mastery: 0.35, category: 'grammar' },
         { knowledgeId: 'clause_relative', name: '定语从句', mastery: 0.42, category: 'grammar' },
-        { knowledgeId: 'vocab_1500', name: '初中词汇', mastery: 0.55, category: 'vocabulary' },
+        { knowledgeId: 'vocab_1500', name: '1500词汇', mastery: 0.55, category: 'vocabulary' },
       ]);
     } finally {
       setLoading(false);
@@ -116,19 +108,7 @@ const Practice: React.FC<PracticeProps> = ({ userId, onBack }) => {
     // 更新知识点掌握度
     if (userId && selectedPoint) {
       try {
-        await fetch('/api/assessment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'update_mastery',
-            userId,
-            data: { 
-              knowledgeId: selectedPoint.knowledgeId, 
-              isCorrect, 
-              priorMastery: selectedPoint.mastery 
-            }
-          })
-        });
+        await updateKnowledgeMastery(selectedPoint.knowledgeId, isCorrect, selectedPoint.mastery, userId);
       } catch (e) {
         console.error('Failed to update mastery:', e);
       }

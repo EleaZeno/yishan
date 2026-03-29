@@ -16,9 +16,15 @@ const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   
-  // 随机抽取测试集
+  // 随机抽取测试集 (每个等级抽取3个，共27个)
   const testSet = useMemo(() => {
-    return [...VOCAB_DATA].sort(() => Math.random() - 0.5);
+    const selected: typeof VOCAB_DATA = [];
+    for (let i = 1; i <= 9; i++) {
+      const levelWords = VOCAB_DATA.filter(w => w.level === i);
+      const shuffled = [...levelWords].sort(() => Math.random() - 0.5);
+      selected.push(...shuffled.slice(0, 3));
+    }
+    return selected.sort(() => Math.random() - 0.5);
   }, []);
 
   const handleAnswer = (known: boolean) => {
@@ -37,22 +43,24 @@ const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack }) => {
     if (step !== 'result') return 0;
     
     // 统计各等级得分
-    const levelStats = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    const levelCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    const levelStats: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
+    const levelCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
     
     Object.entries(answers).forEach(([idx, known]) => {
       const word = testSet[parseInt(idx)];
-      levelCounts[word.level as keyof typeof levelCounts]++;
-      if (known) levelStats[word.level as keyof typeof levelStats]++;
+      if (word && word.level) {
+        levelCounts[word.level]++;
+        if (known) levelStats[word.level]++;
+      }
     });
 
-    // 科学权重计算: 基础词库(2000) * 率 + 中级(4000) * 率 ...
+    // 科学权重计算: 各等级词汇量 * 掌握率
     let estimate = 0;
-    const tierSizes = [2000, 2000, 2000, 2000, 4000];
+    const tierSizes = [500, 1000, 1500, 2500, 3500, 4500, 6000, 8000, 12000];
     
-    [1, 2, 3, 4, 5].forEach((lvl, i) => {
-      const rate = levelCounts[lvl as keyof typeof levelCounts] > 0 
-        ? levelStats[lvl as keyof typeof levelStats] / levelCounts[lvl as keyof typeof levelCounts] 
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((lvl, i) => {
+      const rate = levelCounts[lvl] > 0 
+        ? levelStats[lvl] / levelCounts[lvl] 
         : 0;
       estimate += tierSizes[i] * rate;
     });
@@ -86,7 +94,7 @@ const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack }) => {
               </div>
               <h2 className="text-3xl font-black text-foreground mb-4 tracking-tight">认知边界测定</h2>
               <p className="text-muted-foreground leading-relaxed mb-10 font-medium">
-                基于分频抽样算法，通过 25 组不同难度的认知信号探测你的潜在词汇量负载。
+                基于分频抽样算法，通过 27 组不同难度的认知信号探测你的潜在词汇量负载。
               </p>
               <button 
                 onClick={() => setStep('testing')}
@@ -117,8 +125,8 @@ const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack }) => {
 
               <div className="bg-card border border-border p-12 rounded-[2.5rem] text-center mb-12 min-h-[240px] flex flex-col items-center justify-center">
                 <h3 className="text-5xl font-black text-foreground tracking-tighter mb-4">{testSet[currentIndex].word}</h3>
-                <div className="flex gap-2">
-                  {[1,2,3,4,5].map(lvl => (
+                <div className="flex gap-1.5">
+                  {[1,2,3,4,5,6,7,8,9].map(lvl => (
                      <div key={lvl} className={`w-1.5 h-1.5 rounded-full ${lvl <= testSet[currentIndex].level ? 'bg-primary/60' : 'bg-muted'}`} />
                   ))}
                 </div>
@@ -162,8 +170,7 @@ const VocabTest: React.FC<VocabTestProps> = ({ userId, onBack }) => {
               <div className="space-y-3">
                  <button 
                   onClick={async () => {
-                    const correctCount = Object.values(answers).filter(v => v).length;
-                    await assessVocabulary(correctCount, testSet.length, userId);
+                    await assessVocabulary(calculatedVocab, userId);
                     onBack();
                   }}
                   className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black shadow-xl active:scale-95 transition-all"

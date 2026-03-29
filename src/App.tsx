@@ -190,7 +190,7 @@ const App: React.FC = () => {
       user={user}
       onLogout={handleLogout}
     >
-      {activeTab === 'dashboard' && <Dashboard stats={stats} wordsForChart={chartData} isOnline={isOnline} onStartStudy={() => setActiveTab('study')} />}
+      {activeTab === 'dashboard' && <Dashboard stats={stats} wordsForChart={chartData} isOnline={isOnline} onStartStudy={() => setActiveTab('study')} onNavigateToPractice={() => setActiveTab('practice')} />}
       {activeTab === 'study' && <StudySession dueWords={dueWords} onComplete={() => { setActiveTab('dashboard'); loadDashboardData(); }} onAddWord={() => setIsAddModalOpen(true)} onImportCore={handleImportCore} isImporting={isImporting} onUpdateWord={handleUpdateWord} />}
       {activeTab === 'library' && <Library onImportCore={handleImportCore} isImporting={isImporting} onDelete={handleDeleteWord} />}
       {activeTab === 'diagnose' && !activeTest && <DiagnosticCenter userId={user?.id} onStartTest={(testType: string) => {

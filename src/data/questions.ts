@@ -293,6 +293,63 @@ export const GRAMMAR_QUESTIONS: Question[] = [
     options: ['Because', 'Although', 'Since', 'Unless'],
     answer: 1, explanation: 'although 表示让步，"虽然...但是..."，前后转折关系'
   },
+  // 情态动词
+  {
+    id: 'g026', type: 'grammar', difficulty: 0.4, knowledgeId: 'grammar_modal',
+    content: 'You ___ stop when the traffic light is red.',
+    options: ['can', 'may', 'must', 'need'],
+    answer: 2, explanation: 'must 表示必须，强调客观上的必要性'
+  },
+  {
+    id: 'g027', type: 'grammar', difficulty: 0.5, knowledgeId: 'grammar_modal',
+    content: 'He ___ be at home, because the light is off.',
+    options: ['mustn\'t', 'can\'t', 'shouldn\'t', 'needn\'t'],
+    answer: 1, explanation: 'can\'t be 表示"不可能"，用于否定推测'
+  },
+  {
+    id: 'g028', type: 'grammar', difficulty: 0.6, knowledgeId: 'grammar_modal',
+    content: 'You ___ have told him the truth earlier. Now it\'s too late.',
+    options: ['must', 'can', 'should', 'may'],
+    answer: 2, explanation: 'should have done 表示"本应该做某事却没做"，带有责备的语气'
+  },
+  // 虚拟语气
+  {
+    id: 'g029', type: 'grammar', difficulty: 0.7, knowledgeId: 'grammar_subjunctive',
+    content: 'If I ___ you, I would not do that.',
+    options: ['am', 'was', 'were', 'be'],
+    answer: 2, explanation: '与现在事实相反的虚拟语气，be动词一律用were'
+  },
+  {
+    id: 'g030', type: 'grammar', difficulty: 0.8, knowledgeId: 'grammar_subjunctive',
+    content: 'I wish I ___ a bird and could fly in the sky.',
+    options: ['am', 'was', 'were', 'have been'],
+    answer: 2, explanation: 'wish 后接宾语从句，与现在事实相反用一般过去时，be动词用were'
+  },
+  {
+    id: 'g031', type: 'grammar', difficulty: 0.8, knowledgeId: 'grammar_subjunctive',
+    content: 'If he ___ yesterday, he would have met the famous singer.',
+    options: ['came', 'comes', 'had come', 'has come'],
+    answer: 2, explanation: '与过去事实相反的虚拟语气，从句用 had + 过去分词'
+  },
+  // 介词
+  {
+    id: 'g032', type: 'grammar', difficulty: 0.3, knowledgeId: 'grammar_preposition',
+    content: 'He was born ___ May 1st, 2000.',
+    options: ['in', 'on', 'at', 'from'],
+    answer: 1, explanation: '在具体的某一天前用介词 on'
+  },
+  {
+    id: 'g033', type: 'grammar', difficulty: 0.4, knowledgeId: 'grammar_preposition',
+    content: 'She is very good ___ playing the piano.',
+    options: ['in', 'at', 'with', 'for'],
+    answer: 1, explanation: 'be good at 意为"擅长于..."'
+  },
+  {
+    id: 'g034', type: 'grammar', difficulty: 0.5, knowledgeId: 'grammar_preposition',
+    content: 'The bridge is made ___ stone.',
+    options: ['of', 'from', 'in', 'by'],
+    answer: 0, explanation: 'be made of 表示"由...制成"，能看出原材料'
+  },
 ];
 
 // ==================== 阅读理解题 ====================
@@ -345,6 +402,60 @@ export const READING_QUESTIONS: Question[] = [
     options: ['One month', 'Six months', 'One year', 'Two years'],
     answer: 2, explanation: '文章明确说 "The study followed 1000 students for one year"'
   },
+  {
+    id: 'r009', type: 'reading', difficulty: 0.5, knowledgeId: 'reading_main',
+    content: 'Many people think that deserts are completely dead and empty. However, this is not true. Deserts are home to many kinds of plants and animals that have adapted to the harsh environment. For example, cacti can store water in their thick stems. Question: What is the main idea of the passage?',
+    options: ['Deserts are dead and empty.', 'Cacti store water in their stems.', 'Deserts have life and adapted species.', 'Animals cannot survive in deserts.'],
+    answer: 2, explanation: '文章反驳了沙漠毫无生机的观点，指出沙漠中有很多适应了恶劣环境的动植物。'
+  },
+  {
+    id: 'r010', type: 'reading', difficulty: 0.6, knowledgeId: 'reading_detail',
+    content: 'The Great Wall of China is one of the most famous landmarks in the world. It was built over many centuries to protect the Chinese Empire from invasions. The wall is not a single continuous line, but a series of walls and fortifications. Question: Why was the Great Wall built?',
+    options: ['To attract tourists.', 'To protect the empire from invasions.', 'To connect different cities.', 'To serve as a trade route.'],
+    answer: 1, explanation: '文章明确提到 "It was built over many centuries to protect the Chinese Empire from invasions."'
+  },
+  {
+    id: 'r011', type: 'reading', difficulty: 0.7, knowledgeId: 'reading_infer',
+    content: 'When Sarah saw the dark clouds gathering and felt the sudden drop in temperature, she quickly packed up her picnic basket and headed for her car. Question: What can be inferred from Sarah\'s actions?',
+    options: ['She didn\'t like the food.', 'She was expecting a storm.', 'She forgot something in her car.', 'She wanted to go home early.'],
+    answer: 1, explanation: '看到乌云密布和气温骤降，她赶紧收拾野餐篮走向汽车，可以推断她预料到暴风雨要来了。'
+  },
+  {
+    id: 'r012', type: 'reading', difficulty: 0.8, knowledgeId: 'reading_vocab',
+    content: 'The company\'s new policy was met with widespread opposition from the employees. Many workers protested outside the building, demanding a change. Question: What does the word "opposition" most likely mean?',
+    options: ['Agreement', 'Support', 'Resistance', 'Understanding'],
+    answer: 2, explanation: '根据后文的 "protested" (抗议) 和 "demanding a change" (要求改变)，可以推断 opposition 意为"反对，抵抗" (Resistance)。'
+  },
+  {
+    id: 'r013', type: 'reading', difficulty: 0.5, knowledgeId: 'reading_main',
+    content: 'Sleep is essential for a person\'s health and wellbeing. According to the National Sleep Foundation, adults need between 7 and 9 hours of sleep per night. Lack of sleep can lead to a variety of health problems, including obesity, diabetes, and heart disease. Question: What is the main purpose of this passage?',
+    options: ['To explain how to sleep better.', 'To warn about the dangers of obesity.', 'To emphasize the importance of sleep.', 'To describe the National Sleep Foundation.'],
+    answer: 2, explanation: '文章主要强调睡眠对健康的重要性，并指出了缺乏睡眠的危害。'
+  },
+  {
+    id: 'r014', type: 'reading', difficulty: 0.6, knowledgeId: 'reading_detail',
+    content: 'The Amazon rainforest is the largest rainforest in the world. It covers an area of 5.5 million square kilometers and spans across nine countries in South America. Brazil contains 60% of the rainforest, followed by Peru with 13%. Question: Which country contains the largest portion of the Amazon rainforest?',
+    options: ['Peru', 'Colombia', 'Brazil', 'Argentina'],
+    answer: 2, explanation: '文章明确指出 "Brazil contains 60% of the rainforest"。'
+  },
+  {
+    id: 'r015', type: 'reading', difficulty: 0.7, knowledgeId: 'reading_infer',
+    content: 'As the teacher handed back the graded exams, Mark\'s hands began to shake. He stared at the red "D" circled at the top of the page and sighed heavily. He knew his parents would not be pleased. Question: How is Mark feeling?',
+    options: ['Excited', 'Relieved', 'Anxious and disappointed', 'Angry'],
+    answer: 2, explanation: 'Mark 手发抖，叹气，且知道父母会不高兴，说明他因为成绩差而感到焦虑和失望。'
+  },
+  {
+    id: 'r016', type: 'reading', difficulty: 0.8, knowledgeId: 'reading_vocab',
+    content: 'The new smartphone features a sleek design and an innovative camera system that allows users to take professional-quality photos in low light. Question: What does the word "innovative" mean in this context?',
+    options: ['Old-fashioned', 'Expensive', 'New and original', 'Complicated'],
+    answer: 2, explanation: 'innovative 意为"创新的，新颖的"，指引入了新思想或新方法。'
+  },
+  {
+    id: 'r017', type: 'reading', difficulty: 0.6, knowledgeId: 'reading_main',
+    content: 'Recycling is a simple way to help protect the environment. By recycling paper, plastic, and glass, we can reduce the amount of waste that ends up in landfills. It also conserves natural resources and saves energy. Question: What is the best title for this passage?',
+    options: ['How to Recycle Paper', 'The Benefits of Recycling', 'The Problem with Landfills', 'Saving Energy at Home'],
+    answer: 1, explanation: '文章主要讨论了回收的好处，包括减少垃圾、节约资源和能源。'
+  },
 ];
 
 // ==================== 听力理解题 ====================
@@ -378,6 +489,60 @@ export const LISTENING_QUESTIONS: Question[] = [
     content: 'What is the probable relationship between the speakers? (Audio: Man: Your table is ready, ma\'am. Right this way. Woman: Thank you. Could we get the menu, please?)',
     options: ['Husband and wife', 'Teacher and student', 'Waiter and customer', 'Doctor and patient'],
     answer: 2, explanation: '男士说"您的桌子准备好了"，女士要菜单，可以推断是服务员和顾客的关系。'
+  },
+  {
+    id: 'l006', type: 'listening', difficulty: 0.4, knowledgeId: 'listen_detail',
+    content: 'How much is the ticket? (Audio: The regular ticket is $20, but with your student ID, you get a 50% discount.)',
+    options: ['$10', '$20', '$30', '$40'],
+    answer: 0, explanation: '原价20美元，学生证打五折，所以是10美元。'
+  },
+  {
+    id: 'l007', type: 'listening', difficulty: 0.5, knowledgeId: 'listen_main',
+    content: 'What is the announcement about? (Audio: Attention all passengers on flight 402 to New York. Your flight has been delayed due to severe weather conditions. Please remain in the waiting area.)',
+    options: ['A lost item', 'A flight delay', 'A gate change', 'A boarding call'],
+    answer: 1, explanation: '广播提到 "Your flight has been delayed" (您的航班已延误)。'
+  },
+  {
+    id: 'l008', type: 'listening', difficulty: 0.7, knowledgeId: 'listen_infer',
+    content: 'What does the man imply? (Audio: Woman: Are you going to the concert tonight? Man: I have a huge history paper due tomorrow morning.)',
+    options: ['He is going to the concert.', 'He likes history.', 'He cannot go to the concert.', 'He already finished his paper.'],
+    answer: 2, explanation: '男士说明天早上有一篇很长的历史论文要交，暗示他今晚没时间去听音乐会。'
+  },
+  {
+    id: 'l009', type: 'listening', difficulty: 0.8, knowledgeId: 'listen_detail',
+    content: 'What did the woman forget? (Audio: Man: Do you have the tickets? Woman: Oh no! I left them on the kitchen counter when I was grabbing my keys.)',
+    options: ['Her keys', 'Her phone', 'Her wallet', 'The tickets'],
+    answer: 3, explanation: '女士说 "I left them (the tickets) on the kitchen counter" (我把它们落在厨房台面上了)。'
+  },
+  {
+    id: 'l010', type: 'listening', difficulty: 0.5, knowledgeId: 'listen_detail',
+    content: 'What time does the train leave? (Audio: The next train to Chicago will depart from platform 3 at 2:45 PM.)',
+    options: ['2:15 PM', '2:30 PM', '2:45 PM', '3:00 PM'],
+    answer: 2, explanation: '录音中明确提到火车将在 2:45 PM 发车。'
+  },
+  {
+    id: 'l011', type: 'listening', difficulty: 0.6, knowledgeId: 'listen_main',
+    content: 'What are the speakers discussing? (Audio: Man: Have you decided where to go for your vacation? Woman: I\'m torn between a beach resort in Hawaii and a cultural tour in Europe.)',
+    options: ['Work schedules', 'Vacation plans', 'A business trip', 'Moving to a new city'],
+    answer: 1, explanation: '两人在讨论去哪里度假 (vacation plans)。'
+  },
+  {
+    id: 'l012', type: 'listening', difficulty: 0.7, knowledgeId: 'listen_infer',
+    content: 'What does the woman mean? (Audio: Man: Can you help me move this sofa? Woman: I\'d love to, but my back has been killing me lately.)',
+    options: ['She will help him move the sofa.', 'She wants to buy a new sofa.', 'She cannot help him because her back hurts.', 'She is going to the doctor.'],
+    answer: 2, explanation: '女士说 "my back has been killing me lately" (我最近背痛得厉害)，委婉拒绝了帮忙。'
+  },
+  {
+    id: 'l013', type: 'listening', difficulty: 0.4, knowledgeId: 'listen_detail',
+    content: 'What did the man order? (Audio: Waitress: Are you ready to order? Man: Yes, I\'ll have the grilled chicken salad and a glass of iced tea, please.)',
+    options: ['A hamburger and fries', 'Grilled chicken salad and iced tea', 'Steak and a beer', 'Pasta and water'],
+    answer: 1, explanation: '男士点的是烤鸡肉沙拉和冰茶 (grilled chicken salad and a glass of iced tea)。'
+  },
+  {
+    id: 'l014', type: 'listening', difficulty: 0.8, knowledgeId: 'listen_infer',
+    content: 'What can be inferred about the man? (Audio: Woman: You look exhausted. Did you stay up late again? Man: Yeah, I was up until 3 AM trying to fix a bug in my code.)',
+    options: ['He is a doctor.', 'He is a student.', 'He is a software developer.', 'He is a mechanic.'],
+    answer: 2, explanation: '男士熬夜到凌晨3点为了修复代码中的bug (fix a bug in my code)，可以推断他是一名软件开发者。'
   }
 ];
 
@@ -412,6 +577,60 @@ export const WRITING_QUESTIONS: Question[] = [
     content: '在写一封正式的求职信时，以下哪个结尾最合适？',
     options: ['Love,', 'Yours sincerely,', 'See you soon,', 'Cheers,'],
     answer: 1, explanation: '正式信件通常用 Yours sincerely 或 Yours faithfully 结尾。'
+  },
+  {
+    id: 'w006', type: 'writing', difficulty: 0.4, knowledgeId: 'write_sentence',
+    content: '请将以下句子翻译成英文：如果明天下雨，我们就不去野餐了。',
+    options: ['If it rain tomorrow, we will not go for a picnic.', 'If it rains tomorrow, we will not go for a picnic.', 'If it will rain tomorrow, we do not go for a picnic.', 'If it rains tomorrow, we do not go for a picnic.'],
+    answer: 1, explanation: '条件状语从句主将从现，从句用一般现在时 rains，主句用一般将来时 will not go。'
+  },
+  {
+    id: 'w007', type: 'writing', difficulty: 0.5, knowledgeId: 'write_sentence',
+    content: '找出句子中的语法错误：There is a lot of peoples in the park.',
+    options: ['There', 'is', 'a lot of', 'peoples'],
+    answer: 3, explanation: 'people 本身就是复数名词，不需要加 s。同时谓语动词应该用 are。'
+  },
+  {
+    id: 'w008', type: 'writing', difficulty: 0.6, knowledgeId: 'write_paragraph',
+    content: '选择最合适的过渡词填空：He is very smart. ___, he is also very hardworking.',
+    options: ['However', 'Therefore', 'Moreover', 'Otherwise'],
+    answer: 2, explanation: '前后两句是递进关系，"他很聪明，而且他也很努力"，用 Moreover (此外，而且)。'
+  },
+  {
+    id: 'w009', type: 'writing', difficulty: 0.8, knowledgeId: 'write_essay',
+    content: '在议论文中，以下哪句话最适合用来引出反方观点？',
+    options: ['I strongly believe that...', 'In conclusion...', 'On the other hand, some people argue that...', 'First of all...'],
+    answer: 2, explanation: '"On the other hand, some people argue that..." (另一方面，一些人认为...) 常用于引出对立或反方的观点。'
+  },
+  {
+    id: 'w010', type: 'writing', difficulty: 0.4, knowledgeId: 'write_sentence',
+    content: '请将以下句子翻译成英文：他不仅会说英语，还会说法语。',
+    options: ['He speaks not only English but also French.', 'He speaks English and French.', 'He not only speaks English, he speaks French.', 'He speaks English, also French.'],
+    answer: 0, explanation: 'not only... but also... 意为"不仅...而且..."，连接两个并列的成分。'
+  },
+  {
+    id: 'w011', type: 'writing', difficulty: 0.5, knowledgeId: 'write_sentence',
+    content: '找出句子中的语法错误：I am looking forward to see you soon.',
+    options: ['am', 'looking', 'to', 'see'],
+    answer: 3, explanation: 'look forward to 中的 to 是介词，后面应该接动名词 seeing。'
+  },
+  {
+    id: 'w012', type: 'writing', difficulty: 0.6, knowledgeId: 'write_paragraph',
+    content: '选择最合适的连词填空：___ he was very tired, he continued to work.',
+    options: ['Because', 'Although', 'If', 'Since'],
+    answer: 1, explanation: '前后是让步关系，"虽然他很累，但他继续工作"，用 Although。'
+  },
+  {
+    id: 'w013', type: 'writing', difficulty: 0.7, knowledgeId: 'write_essay',
+    content: '在写一篇关于"保护环境"的英语作文时，以下哪个句子最适合作为结论句？',
+    options: ['There are many environmental problems today.', 'In short, protecting the environment is everyone\'s responsibility.', 'First, we should plant more trees.', 'Some people think pollution is not a big deal.'],
+    answer: 1, explanation: '"In short" (简而言之) 常用于总结全文，"保护环境是每个人的责任" 适合作为结论。'
+  },
+  {
+    id: 'w014', type: 'writing', difficulty: 0.8, knowledgeId: 'write_paragraph',
+    content: '以下哪个句子存在"中式英语 (Chinglish)"的问题？',
+    options: ['I will try my best.', 'Open the light, please.', 'Please turn on the light.', 'I completely agree with you.'],
+    answer: 1, explanation: '"开灯"在英语中应该是 turn on the light，而不是 open the light。'
   }
 ];
 

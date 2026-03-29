@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../services/storage';
-import { Calendar, Target, Zap, BookOpen } from 'lucide-react';
+import { Calendar, Target, Zap, BookOpen, Brain } from 'lucide-react';
+import { getWeakPoints } from '../services/assessment';
 
 interface StudyPlan {
   id: string;
@@ -22,6 +23,47 @@ export default function StudyPlanGenerator() {
     dailyGoal: 10,
     duration: 30,
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem('studyPlans');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setPlans(parsed.map((p: any) => ({
+          ...p,
+          startDate: new Date(p.startDate),
+          endDate: new Date(p.endDate)
+        })));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  const generateSmartPlan = async () => {
+    try {
+      const weakPoints = await getWeakPoints();
+      const topWeak = weakPoints.slice(0, 3).map(wp => wp.name).join(', ');
+      
+      const plan: StudyPlan = {
+        id: crypto.randomUUID(),
+        name: `BKT 智能攻克: ${topWeak}`,
+        dailyGoal: 15,
+        duration: 14,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        words: [], // In a real app, we would fetch words related to these weak points
+        progress: 0,
+        status: 'active',
+      };
+
+      const newPlans = [...plans, plan];
+      setPlans(newPlans);
+      localStorage.setItem('studyPlans', JSON.stringify(newPlans));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const generatePlan = async () => {
     try {
@@ -50,7 +92,7 @@ export default function StudyPlanGenerator() {
 
       const plan: StudyPlan = {
         id: crypto.randomUUID(),
-        name: formData.name || `Study Plan ${new Date().toLocaleDateString()}`,
+        name: formData.name || `常规计划 ${new Date().toLocaleDateString()}`,
         dailyGoal: formData.dailyGoal,
         duration: formData.duration,
         startDate: new Date(),
@@ -60,8 +102,9 @@ export default function StudyPlanGenerator() {
         status: 'active',
       };
 
-      setPlans([...plans, plan]);
-      localStorage.setItem('studyPlans', JSON.stringify([...plans, plan]));
+      const newPlans = [...plans, plan];
+      setPlans(newPlans);
+      localStorage.setItem('studyPlans', JSON.stringify(newPlans));
       setShowForm(false);
       setFormData({ name: '', dailyGoal: 10, duration: 30 });
     } catch (e) {
@@ -77,17 +120,27 @@ export default function StudyPlanGenerator() {
         <p className="text-sm text-muted-foreground mt-1">智能生成个性化学习计划</p>
       </div>
 
-      {/* Create Plan Button */}
-      <button
-        onClick={() => setShowForm(!showForm)}
-        className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-2xl p-4 font-bold hover:shadow-lg transition-all"
-      >
-        + 生成新计划
-      </button>
+      {/* Create Plan Buttons */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={generateSmartPlan}
+          className="bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-2xl p-4 font-bold hover:bg-indigo-500/20 transition-all flex flex-col items-center justify-center gap-2"
+        >
+          <Brain size={24} />
+          <span>BKT 智能生成</span>
+        </button>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-card border border-border text-foreground rounded-2xl p-4 font-bold hover:bg-muted transition-all flex flex-col items-center justify-center gap-2"
+        >
+          <Calendar size={24} />
+          <span>自定义计划</span>
+        </button>
+      </div>
 
       {/* Form */}
       {showForm && (
-        <div className="bg-card rounded-2xl p-4 border border-border space-y-3">
+        <div className="bg-card rounded-2xl p-4 border border-border space-y-3 animate-in slide-in-from-top-2">
           <input
             type="text"
             placeholder="计划名称（可选）"

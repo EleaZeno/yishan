@@ -1,25 +1,37 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Stats, Word } from '../types';
 import StatsChart from './StatsChart';
-import { WifiOff, Activity, ShieldCheck, Flame, Target, Zap } from 'lucide-react';
+import { WifiOff, Activity, ShieldCheck, Flame, Target, Zap, ArrowRight, Brain } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { getWeakPoints } from '../services/assessment';
 
 interface DashboardProps {
   stats: Stats;
   wordsForChart: Word[];
   isOnline: boolean;
   onStartStudy: () => void;
+  onNavigateToPractice?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, onStartStudy }) => {
+const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, onStartStudy, onNavigateToPractice }) => {
   // Mock gamification data
   const currentStreak = 12;
   const dailyGoal = 50;
   const dailyProgress = Math.min(stats.totalSignals, dailyGoal);
   const progressPercent = (dailyProgress / dailyGoal) * 100;
+
+  const [weakPoints, setWeakPoints] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadWeak = async () => {
+      const points = await getWeakPoints();
+      setWeakPoints(points.slice(0, 2)); // Get top 2 weak points for quick access
+    };
+    loadWeak();
+  }, []);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
@@ -88,6 +100,38 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Practice Section */}
+      {weakPoints.length > 0 && (
+        <div className="bg-card border rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Brain className="text-indigo-500" size={20} />
+              <h3 className="font-bold text-lg">智能推荐复习</h3>
+            </div>
+            {onNavigateToPractice && (
+              <Button variant="ghost" size="sm" onClick={onNavigateToPractice} className="text-muted-foreground text-xs">
+                查看全部 <ArrowRight size={14} className="ml-1" />
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {weakPoints.map((wp, idx) => (
+              <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-muted/50 border hover:bg-muted transition-colors">
+                <div>
+                  <p className="font-bold text-sm">{wp.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">掌握度: {Math.round(wp.mastery * 100)}%</p>
+                </div>
+                {onNavigateToPractice && (
+                  <Button size="sm" variant="secondary" onClick={onNavigateToPractice}>
+                    去突破
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <StatsChart words={wordsForChart} />
 
