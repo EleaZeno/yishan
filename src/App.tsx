@@ -20,6 +20,8 @@ import CloudBackupSystem from './components/CloudBackupSystem';
 import LearningHistoryTracker from './components/LearningHistoryTracker';
 import PrivacySettings from './components/PrivacySettings';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import Onboarding from './components/Onboarding';
+import LearningSettings from './components/LearningSettings';
 import AchievementSharing from './components/AchievementSharing';
 import VocabularySharingAndCommunity from './components/VocabularySharingAndCommunity';
 import Profile from './components/Profile';
@@ -195,6 +197,7 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider>
+      <Onboarding onComplete={() => {}} />
       <Layout
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -223,6 +226,7 @@ const App: React.FC = () => {
       {activeTab === 'history' && <LearningHistoryTracker />}
       {activeTab === 'privacy' && <PrivacySettings />}
       {activeTab === 'privacy-policy' && <PrivacyPolicy />}
+      {activeTab === 'learning-settings' && <LearningSettings />}
       {activeTab === 'sharing' && <AchievementSharing />}
       {activeTab === 'community' && <VocabularySharingAndCommunity />}
       {activeTab === 'admin' && <AdminDashboard />}
