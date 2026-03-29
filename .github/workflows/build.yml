@@ -1,0 +1,45 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # 构建 and 测试
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build
+      run: npm run build
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+
+  # Cloudflare Pages 会自动从 GitHub 构建
+  # 不需要手动部署步骤
+  # 
+  # 部署流程：
+  # 1. Push 到 main 分支
+  # 2. Cloudflare 检测到 push
+  # 3. Cloudflare 拉取代码
+  # 4. Cloudflare 运行 npm run build
+  # 5. Cloudflare 部署到 Pages
+  #
+  # ⚠️ 不要用 API 直接上传！会被覆盖。
