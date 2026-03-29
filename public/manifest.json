@@ -2,6 +2,7 @@
   "name": "忆闪 - 科学记忆系统",
   "short_name": "忆闪",
   "description": "基于遗忘曲线的智能记忆系统，科学记忆，过目不忘",
+  "version": "1.5.0",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

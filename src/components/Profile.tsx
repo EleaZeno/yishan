@@ -2,8 +2,11 @@ import React from 'react';
 import { User } from '../types';
 import { 
   TrendingUp, Calendar, Trophy, Bell, Cloud, 
-  BookOpen, Share2, Lock, Settings, ChevronRight, LogOut, GraduationCap
+  BookOpen, Share2, Lock, Settings, ChevronRight, LogOut, GraduationCap, RefreshCw, Moon, Sun
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useTheme } from '../contexts/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileProps {
   user: User | null;
@@ -12,33 +15,43 @@ interface ProfileProps {
 }
 
 export default function Profile({ user, onNavigate, onLogout }: ProfileProps) {
-  const menuGroups = [
-    {
-      title: '学习与分析',
-      items: [
-        { id: 'diagnose', label: '能力诊断', icon: GraduationCap, color: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-500/20' },
-        { id: 'analytics', label: '学习分析', icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-500/20' },
-        { id: 'plans', label: '学习计划', icon: Calendar, color: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-500/20' },
-        { id: 'history', label: '学习历史', icon: BookOpen, color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
-      ]
-    },
-    {
-      title: '成就与互动',
-      items: [
-        { id: 'achievements', label: '我的成就', icon: Trophy, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-500/20' },
-        { id: 'sharing', label: '成就分享', icon: Share2, color: 'text-pink-500', bg: 'bg-pink-100 dark:bg-pink-500/20' },
-        { id: 'community', label: '词库社区', icon: TrendingUp, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-500/20' },
-      ]
-    },
-    {
-      title: '设置与管理',
-      items: [
-        { id: 'reminders', label: '学习提醒', icon: Bell, color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' },
-        { id: 'backup', label: '云端备份', icon: Cloud, color: 'text-cyan-500', bg: 'bg-cyan-100 dark:bg-cyan-500/20' },
-        { id: 'privacy', label: '隐私设置', icon: Lock, color: 'text-slate-500', bg: 'bg-slate-100 dark:bg-slate-500/20' },
-        { id: 'admin', label: '后台管理', icon: Settings, color: 'text-rose-500', bg: 'bg-rose-100 dark:bg-rose-500/20' },
-      ]
+  const { theme, setTheme } = useTheme();
+  const { t, i18n } = useTranslation();
+
+  const handleClearCache = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      toast('缓存已清除，页面将刷新...');
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+      console.error('Clear cache error:', e);
+      toast.error('清除缓存失败');
     }
+  };
+
+  const menuItems = [
+    { id: 'diagnose', label: '能力诊断', icon: GraduationCap },
+    { id: 'analytics', label: '学习分析', icon: TrendingUp },
+    { id: 'plans', label: '学习计划', icon: Calendar },
+    { id: 'history', label: '学习历史', icon: BookOpen },
+    { id: 'achievements', label: '我的成就', icon: Trophy },
+    { id: 'sharing', label: '成就分享', icon: Share2 },
+    { id: 'community', label: '词库社区', icon: TrendingUp },
+    { id: 'reminders', label: '学习提醒', icon: Bell },
+    { id: 'backup', label: '云端备份', icon: Cloud },
+    { id: 'privacy', label: '隐私设置', icon: Lock },
+    { id: 'admin', label: '后台管理', icon: Settings },
   ];
 
   return (
@@ -56,47 +69,94 @@ export default function Profile({ user, onNavigate, onLogout }: ProfileProps) {
         </div>
       </div>
 
-      {/* Menu Groups */}
-      <div className="space-y-6">
-        {menuGroups.map((group, i) => (
-          <div key={i} className="space-y-2">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-4">
-              {group.title}
-            </h3>
-            <div className="bg-card rounded-3xl overflow-hidden border border-border shadow-sm">
-              {group.items.map((item, j) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onNavigate(item.id)}
-                    className={`w-full flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors text-left ${
-                      j !== group.items.length - 1 ? 'border-b border-border/50' : ''
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.bg} ${item.color}`}>
-                      <Icon size={20} />
-                    </div>
-                    <span className="flex-1 font-bold text-foreground">{item.label}</span>
-                    <ChevronRight size={20} className="text-muted-foreground" />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+      {/* Menu Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className="bg-card rounded-2xl p-4 hover:bg-muted/50 transition-colors text-left border border-border shadow-sm flex flex-col gap-2"
+            >
+              <Icon size={24} className="text-primary" />
+              <span className="font-bold text-sm text-foreground">{item.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Logout Button */}
-      {user && (
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        {/* Language Toggle */}
+        <div className="bg-card rounded-2xl p-4 border border-border shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-foreground">{t('settings_language')}</span>
+            <div className="flex gap-2">
+              {[
+                { code: 'zh', label: '中文' },
+                { code: 'en', label: 'English' },
+                { code: 'ja', label: '日本語' },
+              ].map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => i18n.changeLanguage(lang.code)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                    i18n.language === lang.code
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Theme Toggle */}
+        <div className="bg-card rounded-2xl p-4 border border-border shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-foreground flex items-center gap-2">
+              {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+              {t('settings_theme')}
+            </span>
+            <div className="flex gap-2">
+              {(['light', 'dark', 'system'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                    theme === t
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {t === 'light' ? '浅色' : t === 'dark' ? '深色' : '自动'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <button
-          onClick={onLogout}
-          className="w-full bg-card rounded-2xl p-4 text-destructive font-bold flex items-center justify-center gap-2 hover:bg-destructive/10 transition-colors border border-destructive/20 shadow-sm"
+          onClick={handleClearCache}
+          className="w-full bg-card rounded-2xl p-4 text-amber-600 font-bold flex items-center justify-center gap-2 hover:bg-amber-500/10 transition-colors border border-amber-500/20 shadow-sm"
         >
-          <LogOut size={20} />
-          退出登录
+          <RefreshCw size={20} />
+          {t('settings_clear_cache')}
         </button>
-      )}
+
+        {user && (
+          <button
+            onClick={onLogout}
+            className="w-full bg-card rounded-2xl p-4 text-destructive font-bold flex items-center justify-center gap-2 hover:bg-destructive/10 transition-colors border border-destructive/20 shadow-sm"
+          >
+            <LogOut size={20} />
+            {t('settings_logout')}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

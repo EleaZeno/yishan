@@ -96,7 +96,7 @@ const apiAdapter = {
 };
 
 export const db = {
-  isGuestMode: () => !authService.getToken(),
+  isGuestMode: () => true, // 强制使用本地 IndexedDB
 
   // Get Stats (Uses full fetch for now, optimized endpoint recommended for future)
   getStatsData: async (): Promise<Word[]> => {

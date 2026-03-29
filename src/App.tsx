@@ -19,6 +19,7 @@ import ReminderSystem from './components/ReminderSystem';
 import CloudBackupSystem from './components/CloudBackupSystem';
 import LearningHistoryTracker from './components/LearningHistoryTracker';
 import PrivacySettings from './components/PrivacySettings';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import AchievementSharing from './components/AchievementSharing';
 import VocabularySharingAndCommunity from './components/VocabularySharingAndCommunity';
 import Profile from './components/Profile';
@@ -29,9 +30,16 @@ import { getInitialWordState, predictRecallProbability } from './lib/algorithm';
 import { Loader2, Database, BookOpen, Brain, TrendingUp, RefreshCw, Download, Zap } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { getCoreVocabulary } from './data/vocabulary';
+import { VOCAB_DATA } from './data/vocab-data';
 import { initAudio } from './lib/sound';
+import { setupErrorHandling } from './lib/error-handler';
+import { ThemeProvider } from './contexts/ThemeProvider';
+import './i18n';
 import { Toaster, toast } from 'sonner';
 import AdminDashboard from './components/AdminDashboard';
+
+// 初始化错误处理
+setupErrorHandling();
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -150,24 +158,27 @@ const App: React.FC = () => {
     setChartData(prev => prev.map(w => w.id === updatedWord.id ? updatedWord : w));
   };
   
-  const handleImportCore = () => {
-      toast('Import core vocabulary?', {
-        action: {
-          label: 'Confirm',
-          onClick: async () => {
-            setIsImporting(true);
-            try {
-                const vocab = getCoreVocabulary().map(v => ({
-                  ...v, id: crypto.randomUUID(), term: v.term!, definition: v.definition!, tags: v.tags!,
-                  ...getInitialWordState(), createdAt: Date.now()
-                } as Word));
-                await db.importWords(vocab);
-                await loadDashboardData();
-            } catch (e) { console.error(e); }
-            setIsImporting(false);
-          }
-        }
-      });
+  const handleImportCore = async () => {
+      setIsImporting(true);
+      try {
+          const vocab = VOCAB_DATA.map(v => ({
+            id: crypto.randomUUID(),
+            term: v.word,
+            definition: `${v.pos} ${v.translation}`,
+            phonetic: undefined,
+            tags: [`level${v.level}`],
+            ...getInitialWordState(),
+            createdAt: Date.now()
+          } as Word));
+          console.log('Importing', vocab.length, 'words');
+          await db.importWords(vocab);
+          await loadDashboardData();
+          toast(`Successfully imported ${vocab.length} words!`);
+      } catch (e) { 
+          console.error('Import error:', e);
+          toast.error('Import failed: ' + String(e));
+      }
+      setIsImporting(false);
   };
 
   if (authChecking) {
@@ -183,13 +194,14 @@ const App: React.FC = () => {
   }
 
   return (
-    <Layout
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      onAddClick={() => setIsAddModalOpen(true)}
-      user={user}
-      onLogout={handleLogout}
-    >
+    <ThemeProvider>
+      <Layout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onAddClick={() => setIsAddModalOpen(true)}
+        user={user}
+        onLogout={handleLogout}
+      >
       {activeTab === 'dashboard' && <Dashboard stats={stats} wordsForChart={chartData} isOnline={isOnline} onStartStudy={() => setActiveTab('study')} onNavigateToPractice={() => setActiveTab('practice')} />}
       {activeTab === 'study' && <StudySession dueWords={dueWords} onComplete={() => { setActiveTab('dashboard'); loadDashboardData(); }} onAddWord={() => setIsAddModalOpen(true)} onImportCore={handleImportCore} isImporting={isImporting} onUpdateWord={handleUpdateWord} />}
       {activeTab === 'library' && <Library onImportCore={handleImportCore} isImporting={isImporting} onDelete={handleDeleteWord} />}
@@ -210,6 +222,7 @@ const App: React.FC = () => {
       {activeTab === 'backup' && <CloudBackupSystem />}
       {activeTab === 'history' && <LearningHistoryTracker />}
       {activeTab === 'privacy' && <PrivacySettings />}
+      {activeTab === 'privacy-policy' && <PrivacyPolicy />}
       {activeTab === 'sharing' && <AchievementSharing />}
       {activeTab === 'community' && <VocabularySharingAndCommunity />}
       {activeTab === 'admin' && <AdminDashboard />}
@@ -217,6 +230,7 @@ const App: React.FC = () => {
       <AddWordModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSave={handleAddWord} />
       <Toaster />
     </Layout>
+    </ThemeProvider>
   );
 };
 
