@@ -1,6 +1,13 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "name": "yishan-app",
+  "description": "基于遗忘曲线的科学记忆系统",
+  "author": "Yishan Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EleaZeno/yishan.git"
+  },
   "scripts": {
     "preview": "vite preview",
     "build": "vite build",
@@ -8,7 +15,9 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "deploy": "python deploy.py"
+    "deploy": "python deploy.py",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
