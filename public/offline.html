@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>离线 - 忆闪</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: linear-gradient(135deg, #6366f1, #4f46e5); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .container { background: white; border-radius: 24px; padding: 48px; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    h1 { color: #1f2937; font-size: 24px; margin-bottom: 12px; }
+    p { color: #6b7280; line-height: 1.6; margin-bottom: 24px; }
+    button { background: #4f46e5; color: white; border: none; padding: 12px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    button:hover { background: #4338ca; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>当前处于离线状态</h1>
+    <p>网络恢复后会自动同步您的学习数据。</p>
+    <button onclick="window.location.reload()">重试连接</button>
+  </div>
+</body>
+</html>
