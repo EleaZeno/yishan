@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getInitialWordState, predictRecallProbability } from '../../lib/algorithm';
+import { getInitialWordState, predictRecallProbability } from '../lib/algorithm';
 
 describe('Algorithm', () => {
   it('should initialize word state correctly', () => {
