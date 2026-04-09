@@ -353,6 +353,7 @@ const App: React.FC = () => {
             onImportCore={handleImportCore}
             isImporting={isImporting}
             onDelete={handleDeleteWord}
+            user={user}
           />
         )}
         {activeTab === 'diagnose' && !activeTest && (
