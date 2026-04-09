@@ -1,8 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Stats, Word } from '../types';
 import StatsChart from './StatsChart';
-import { WifiOff, Activity, ShieldCheck, Flame, Target, Zap, ArrowRight, Brain } from 'lucide-react';
+import MemoryDashboard from './MemoryDashboard';
+import QuickReview from './QuickReview';
+import { WifiOff, Activity, ShieldCheck, Flame, Target, Zap, ArrowRight, Brain, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -17,29 +18,47 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, onStartStudy, onNavigateToPractice }) => {
-  // Mock gamification data
+  // Gamification data
   const currentStreak = 12;
   const dailyGoal = 50;
   const dailyProgress = Math.min(stats.totalSignals, dailyGoal);
   const progressPercent = (dailyProgress / dailyGoal) * 100;
 
   const [weakPoints, setWeakPoints] = useState<any[]>([]);
+  const [showQuickReview, setShowQuickReview] = useState(false);
+  const [reviewResults, setReviewResults] = useState<{ word: Word; metrics: any }[]>([]);
 
   useEffect(() => {
     const loadWeak = async () => {
       const points = await getWeakPoints();
-      setWeakPoints(points.slice(0, 2)); // Get top 2 weak points for quick access
+      setWeakPoints(points.slice(0, 2));
     };
     loadWeak();
   }, []);
 
+  const handleQuickReviewComplete = (results: { word: Word; metrics: any }[]) => {
+    setReviewResults(results);
+    setShowQuickReview(false);
+    // TODO: Save results to database
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
+      {/* Quick Review Modal */}
+      {showQuickReview && (
+        <QuickReview
+          words={wordsForChart}
+          onComplete={handleQuickReviewComplete}
+          onClose={() => setShowQuickReview(false)}
+          maxCards={10}
+        />
+      )}
+
       {!isOnline && (
-          <div className="bg-muted text-muted-foreground px-4 py-3 rounded-xl border flex items-center gap-2 text-sm">
-              <WifiOff size={16} />
-              <span>本地暂存模式：交互数据将在连接建立后同步至云端。</span>
-          </div>
+        <div className="bg-muted text-muted-foreground px-4 py-3 rounded-xl border flex items-center gap-2 text-sm">
+          <WifiOff size={16} />
+          <span>本地暂存模式：交互数据将在连接建立后同步至云端。</span>
+        </div>
       )}
 
       {/* Gamification Header */}
@@ -62,6 +81,35 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
         </div>
       </div>
 
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-3">
+        <Button
+          onClick={() => setShowQuickReview(true)}
+          variant="outline"
+          className="h-20 flex-col gap-1 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:border-primary/50"
+        >
+          <Sparkles size={20} className="text-primary" />
+          <span className="text-sm font-medium">快速复习</span>
+          <span className="text-xs text-muted-foreground">10张卡片</span>
+        </Button>
+        <Button
+          onClick={onStartStudy}
+          variant="outline"
+          className="h-20 flex-col gap-1 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:border-blue-500/50"
+        >
+          <Zap size={20} className="text-blue-500" />
+          <span className="text-sm font-medium">完整学习</span>
+          <span className="text-xs text-muted-foreground">全量复习</span>
+        </Button>
+      </div>
+
+      {/* Memory Dashboard - New Component */}
+      <MemoryDashboard 
+        words={wordsForChart} 
+        onStudyClick={() => setShowQuickReview(true)}
+      />
+
+      {/* Stats Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-primary text-primary-foreground border-none shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 p-2 opacity-20"><ShieldCheck size={40} /></div>
@@ -135,28 +183,29 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
 
       <StatsChart words={wordsForChart} />
 
+      {/* CTA */}
       <Card className="bg-slate-900 dark:bg-slate-950 text-white border-slate-800 rounded-3xl overflow-hidden relative">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
         <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/30 shadow-inner">
-                  <Zap size={32} className="fill-indigo-400" />
-              </div>
-              <div>
-                  <h3 className="text-xl font-black tracking-tight text-white">贝叶斯自适应环境</h3>
-                  <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-                      {stats.fadingSignals > 0 
-                        ? `Flux-v5 引擎探测到 ${stats.fadingSignals} 个单词召回概率即将跌破 85% 阈值。` 
-                        : "所有已知信号均处于贝叶斯预测的高置信度区间。"}
-                  </p>
-              </div>
+            <div className="w-16 h-16 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/30 shadow-inner">
+              <Zap size={32} className="fill-indigo-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black tracking-tight text-white">贝叶斯自适应环境</h3>
+              <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                {stats.fadingSignals > 0 
+                  ? `Flux-v5 引擎探测到 ${stats.fadingSignals} 个单词召回概率即将跌破 85% 阈值。` 
+                  : "所有已知信号均处于贝叶斯预测的高置信度区间。"}
+              </p>
+            </div>
           </div>
           <Button 
-              onClick={onStartStudy}
-              size="lg"
-              className="px-10 py-6 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-95 w-full md:w-auto text-lg"
+            onClick={onStartStudy}
+            size="lg"
+            className="px-10 py-6 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-95 w-full md:w-auto text-lg"
           >
-              启动交互流
+            启动交互流
           </Button>
         </CardContent>
       </Card>
@@ -165,4 +214,3 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, wordsForChart, isOnline, o
 };
 
 export default Dashboard;
-
