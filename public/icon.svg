@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
+  <!-- Background -->
+  <rect width="192" height="192" rx="40" fill="#4f46e5"/>
+  <!-- Outer ring -->
+  <circle cx="96" cy="96" r="72" stroke="#818cf8" stroke-width="6" stroke-dasharray="16 8" fill="none" opacity="0.6"/>
+  <!-- Inner circle -->
+  <circle cx="96" cy="96" r="48" fill="#6366f1"/>
+  <!-- Y character -->
+  <text x="96" y="116" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="900" fill="white" text-anchor="middle">Yi</text>
+  <!-- Sparkle dots -->
+  <circle cx="40" cy="48" r="6" fill="#c7d2fe"/>
+  <circle cx="152" cy="144" r="5" fill="#c7d2fe"/>
+  <circle cx="156" cy="52" r="4" fill="#a5b4fc"/>
+</svg>

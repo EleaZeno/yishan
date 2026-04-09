@@ -211,7 +211,7 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
           
           {/* Word List */}
           <div className="flex-1 overflow-y-auto space-y-3 pb-24 no-scrollbar">
-            {filteredWords.length === 0 && !loading ? (
+            {words.length === 0 && !loading ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Search size={48} strokeWidth={1} className="mb-4 opacity-20" />
                 <p className="text-sm font-bold uppercase tracking-[0.2em]">No Signals Detected</p>
@@ -225,8 +225,8 @@ const Library: React.FC<LibraryProps> = ({ onImportCore, isImporting, onDelete, 
                 )}
               </div>
             ) : (
-              filteredWords.map((word, index) => {
-                const isLast = index === filteredWords.length - 1;
+              words.map((word, index) => {
+                const isLast = index === words.length - 1;
                 const contentType = word.contentType || 'word';
                 const typeConfig = CONTENT_TYPE_CONFIG[contentType];
                 const typeLabels = CONTENT_TYPE_LABELS[contentType];
