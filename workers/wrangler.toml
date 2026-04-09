@@ -1,0 +1,18 @@
+name = "yishan-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "YISHAN_DB"
+database_name = "yishan-db"
+database_id = "${YISHAN_DB_ID}"  # Replace with actual D1 DB ID after creation
+
+# KV Namespace binding (for sessions, rate limiting)
+[[kv_namespaces]]
+binding = "YISHAN_KV"
+id = "${YISHAN_KV_ID}"  # Replace with actual KV ID after creation
+
+# Environment variables (secrets, set via `wrangler secret put`)
+# wrangler secret put YISHAN_JWT_SECRET
+# wrangler secret put YISHAN_ADMIN_EMAIL
