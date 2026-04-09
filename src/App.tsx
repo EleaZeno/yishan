@@ -41,6 +41,7 @@ import { Toaster, toast } from 'sonner';
 import AdminDashboard from './components/AdminDashboard';
 import EnhancementPack from './components/EnhancementPack';
 import ShortcutsHelp from './lib/keyboard-shortcuts';
+import GlobalSearch from './components/GlobalSearch';
 import { useKeyboardShortcuts, DEFAULT_SHORTCUTS, Shortcut } from './lib/keyboard-shortcuts';
 import { ToastContainer } from './components/NotificationCenter';
 import { ShortcutsHelp as ShortcutsHelpComponent } from './lib/keyboard-shortcuts';
@@ -68,6 +69,7 @@ const App: React.FC = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   // Keyboard shortcuts
   const shortcuts: Shortcut[] = [
@@ -137,6 +139,13 @@ const App: React.FC = () => {
       description: DEFAULT_SHORTCUTS.HELP.description,
       descriptionZh: DEFAULT_SHORTCUTS.HELP.descriptionZh,
       action: () => setShowShortcuts(true),
+    },
+    {
+      key: DEFAULT_SHORTCUTS.SEARCH.key,
+      modifiers: DEFAULT_SHORTCUTS.SEARCH.modifiers,
+      description: DEFAULT_SHORTCUTS.SEARCH.description,
+      descriptionZh: DEFAULT_SHORTCUTS.SEARCH.descriptionZh,
+      action: () => setShowSearch(true),
     },
     {
       key: DEFAULT_SHORTCUTS.SYNC.key,
@@ -400,6 +409,17 @@ const App: React.FC = () => {
           studyHistory={[]}
           activeTab={activeTab}
           onNavigate={setActiveTab}
+        />
+
+        {/* Global Search */}
+        <GlobalSearch
+          isOpen={showSearch}
+          onClose={() => setShowSearch(false)}
+          onNavigate={setActiveTab}
+          onWordSelect={(word) => {
+            // Switch to library and highlight the word
+            setActiveTab('library');
+          }}
         />
 
         {/* Shortcuts Help */}
