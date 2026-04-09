@@ -86,7 +86,7 @@ export const DEFAULT_SHORTCUTS = {
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Keyboard, Command } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
 interface ShortcutsHelpProps {
   isOpen: boolean;
@@ -175,4 +175,5 @@ const ShortcutsHelp: React.FC<ShortcutsHelpProps> = ({ isOpen, onClose, shortcut
   );
 };
 
+export { ShortcutsHelp };
 export default ShortcutsHelp;
